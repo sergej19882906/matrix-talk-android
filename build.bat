@@ -1,8 +1,8 @@
 @echo off
-REM Скрипт для сборки Matrix Messenger Android
+REM Скрипт для сборки Matrix Talk Android
 
 echo ========================================
-echo Matrix Messenger - Build Script
+echo Matrix Talk - Build Script
 echo ========================================
 echo.
 

@@ -108,7 +108,7 @@ class MatrixRepositoryImpl @Inject constructor(
                 homeServerConnectionConfig = config,
                 matrixId = username,
                 password = password,
-                initialDeviceName = "Matrix Messenger Android"
+                initialDeviceName = "Matrix Talk Android"
             )
             
             session = newSession

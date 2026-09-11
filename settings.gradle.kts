@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "MatrixMessenger"
+rootProject.name = "MatrixTalk"
 include(":app")

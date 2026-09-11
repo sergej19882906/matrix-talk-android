@@ -1,6 +1,6 @@
-# Matrix Messenger for Android
+# Matrix Talk for Android
 
-Android-клиент для децентрализованной сети Matrix, написанный на Kotlin с использованием Jetpack Compose.
+Android-клиент Matrix Talk для децентрализованной сети Matrix, написанный на Kotlin с использованием Jetpack Compose.
 
 ## Возможности
 

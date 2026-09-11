@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Matrix Messenger</string>
+    <string name="app_name">Matrix Talk</string>
     <string name="login">Войти</string>
     <string name="logout">Выйти</string>
     <string name="username">Имя пользователя</string>
