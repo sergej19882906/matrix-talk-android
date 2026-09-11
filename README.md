@@ -20,6 +20,18 @@ Android-клиент Matrix Talk для децентрализованной с�
 - ✅ Material Design 3
 - ✅ Тёмная тема
 
+## Скриншоты интерфейса
+
+Ниже приведены демонстрационные изображения интерфейса Matrix Talk. Они созданы
+как иллюстрация экранов без подключения к Matrix-серверу; фактическое содержимое
+чатов и имена пользователей будут зависеть от вашей учётной записи.
+
+<p>
+  <img src="docs/screenshots/login.svg" alt="Экран входа Matrix Talk" width="220">
+  <img src="docs/screenshots/home.svg" alt="Список чатов Matrix Talk" width="220">
+  <img src="docs/screenshots/chat.svg" alt="Экран чата Matrix Talk" width="220">
+</p>
+
 ## Технологии
 
 - **Язык**: Kotlin
