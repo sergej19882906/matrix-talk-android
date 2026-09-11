@@ -77,6 +77,20 @@ app/
 .\gradlew.bat test
 ```
 
+Для Linux/macOS:
+
+```bash
+# Сделать скрипты исполняемыми (обычно достаточно выполнить один раз)
+chmod +x gradlew build.sh
+
+# Полная проверка и сборка debug-версии
+./build.sh
+
+# Отдельные Gradle-команды
+./gradlew test
+./gradlew assembleDebug
+```
+
 `local.properties` создаётся локально и намеренно не добавляется в Git.
 
 ## Настройка
