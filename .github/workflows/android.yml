@@ -38,7 +38,7 @@ jobs:
         run: .\gradlew.bat assembleRelease --no-daemon
 
       - name: Upload release APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: matrix-talk-release-windows
           path: app/build/outputs/apk/release/*-unsigned.apk
@@ -63,7 +63,7 @@ jobs:
         run: ./build.sh
 
       - name: Upload release APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: matrix-talk-release-linux
           path: app/build/outputs/apk/release/*-unsigned.apk
