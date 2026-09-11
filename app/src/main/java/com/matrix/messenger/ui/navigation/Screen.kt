@@ -5,6 +5,7 @@ import android.net.Uri
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Home : Screen("home")
+    object Bridges : Screen("bridges")
     object Chat : Screen("chat/{roomId}") {
         fun createRoute(roomId: String) = "chat/${Uri.encode(roomId)}"
     }

@@ -28,6 +28,7 @@ fun HomeScreen(
     onRoomClick: (String) -> Unit,
     onLogout: () -> Unit,
     onCreateChat: () -> Unit,
+    onBridges: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -69,6 +70,9 @@ fun HomeScreen(
                     }
                     IconButton(onClick = onCreateChat) {
                         Icon(Icons.Default.Add, contentDescription = "Создать чат")
+                    }
+                    IconButton(onClick = onBridges) {
+                        Icon(Icons.Default.Link, contentDescription = "Мосты")
                     }
                     IconButton(onClick = viewModel::logout) {
                         Icon(Icons.Default.Logout, contentDescription = "Выйти")

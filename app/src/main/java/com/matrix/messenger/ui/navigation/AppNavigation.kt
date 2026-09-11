@@ -8,6 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.matrix.messenger.ui.chat.ChatScreen
+import com.matrix.messenger.ui.bridges.BridgesScreen
 import com.matrix.messenger.ui.home.HomeScreen
 import com.matrix.messenger.ui.login.LoginScreen
 
@@ -44,8 +45,15 @@ fun AppNavigation(
                 },
                 onCreateChat = {
                     // TODO: Показать диалог создания чата
+                },
+                onBridges = {
+                    navController.navigate(Screen.Bridges.route)
                 }
             )
+        }
+
+        composable(Screen.Bridges.route) {
+            BridgesScreen(onNavigateBack = { navController.popBackStack() })
         }
 
         composable(
