@@ -14,5 +14,7 @@ fi
 chmod +x ./gradlew
 ./gradlew test --no-daemon
 ./gradlew assembleDebug --no-daemon
+./gradlew assembleRelease --no-daemon
 
 echo "Debug APK: app/build/outputs/apk/debug/app-debug.apk"
+echo "Release APK: app/build/outputs/apk/release/app-release-unsigned.apk"

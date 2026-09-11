@@ -75,6 +75,9 @@ app/
 
 # Запуск тестов
 .\gradlew.bat test
+
+# Сборка release APK
+.\gradlew.bat assembleRelease
 ```
 
 Для Linux/macOS:
@@ -89,9 +92,15 @@ chmod +x gradlew build.sh
 # Отдельные Gradle-команды
 ./gradlew test
 ./gradlew assembleDebug
+./gradlew assembleRelease
 ```
 
 `local.properties` создаётся локально и намеренно не добавляется в Git.
+
+Release APK создаётся по адресу
+`app/build/outputs/apk/release/app-release-unsigned.apk`. Это unsigned APK для
+тестирования. Для публикации в Google Play его необходимо подписать собственным
+keystore; ключи и пароли нельзя добавлять в репозиторий.
 
 ## Настройка
 
@@ -119,8 +128,9 @@ chmod +x gradlew build.sh
 
 ## GitHub Actions
 
-Workflow [android.yml](.github/workflows/android.yml) запускает тесты и собирает
-Debug APK на каждый push и pull request.
+Workflow [android.yml](.github/workflows/android.yml) запускает тесты, собирает
+Debug и Release APK на каждый push и pull request, а Release APK публикуется как
+GitHub Actions artifact.
 
 ## Лицензия
 

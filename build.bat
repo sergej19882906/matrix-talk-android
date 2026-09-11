@@ -40,11 +40,17 @@ echo [STEP 3] Сборка debug версии...
 call gradlew.bat assembleDebug
 echo.
 
+REM Сборка Release версии
+echo [STEP 4] Сборка release версии...
+call gradlew.bat assembleRelease
+echo.
+
 REM Проверка результата
 if %ERRORLEVEL% EQU 0 (
     echo ========================================
     echo [SUCCESS] Сборка завершена успешно!
     echo APK файл: app\build\outputs\apk\debug\app-debug.apk
+    echo Release APK: app\build\outputs\apk\release\app-release-unsigned.apk
     echo ========================================
 ) else (
     echo ========================================
