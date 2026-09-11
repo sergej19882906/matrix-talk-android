@@ -26,7 +26,7 @@ Android-клиент Matrix Talk для децентрализованной с�
 - **UI**: Jetpack Compose + Material 3
 - **Архитектура**: MVVM + Clean Architecture
 - **DI**: Hilt
-- **Matrix SDK**: matrix-android-sdk2 1.6.50
+- **Matrix SDK**: matrix-android-sdk2 1.6.62
 - **Навигация**: Navigation Compose
 - **Корутины**: kotlinx.coroutines
 - **Flow**: StateFlow, Channel

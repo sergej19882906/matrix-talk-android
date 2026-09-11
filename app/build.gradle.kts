@@ -84,7 +84,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.9.0")
 
     // Matrix SDK (element-android)
-    implementation("org.matrix.android:matrix-android-sdk2:1.6.50")
+    implementation("org.matrix.android:matrix-android-sdk2:1.6.62")
 
     // Network
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
