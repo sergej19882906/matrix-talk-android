@@ -8,10 +8,31 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.*
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -60,11 +81,8 @@ class CallActivity : ComponentActivity() {
     @OptIn(ExperimentalPermissionsApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Настройка окна для звонка поверх lock screen
         setupWindowForCall()
 
-        // Читаем параметры из Intent
         val callId = intent.getStringExtra(EXTRA_CALL_ID) ?: ""
         val roomId = intent.getStringExtra(EXTRA_ROOM_ID) ?: ""
         val peerUserId = intent.getStringExtra(EXTRA_PEER_USER_ID) ?: ""
@@ -78,19 +96,15 @@ class CallActivity : ComponentActivity() {
         setContent {
             MatrixMessengerTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    // Запрос разрешений для звонка
                     val permissionsState = rememberMultiplePermissionsState(
-                        permissions = buildList {
-                            add(android.Manifest.permission.RECORD_AUDIO)
-                            add(android.Manifest.permission.CAMERA)
-                        }
+                        permissions = listOf(
+                            android.Manifest.permission.RECORD_AUDIO,
+                            android.Manifest.permission.CAMERA
+                        )
                     )
 
-                    val allPermissionsGranted = permissionsState.permissions.all { 
-                        it.status.isGranted 
-                    }
+                    val allPermissionsGranted = permissionsState.permissions.all { it.status.isGranted }
 
-                    // Запрашиваем разрешения при первом запуске
                     LaunchedEffect(Unit) {
                         if (!allPermissionsGranted) {
                             permissionsState.launchMultiplePermissionRequest()
@@ -105,24 +119,16 @@ class CallActivity : ComponentActivity() {
                             peerAvatarUrl = peerAvatarUrl,
                             isVideo = isVideo,
                             isOutgoing = !isIncoming,
-                            onCallEnded = {
-                                finish()
-                            }
+                            onCallEnded = { finish() }
                         )
                     } else {
-                        // Экран запроса разрешений
                         PermissionRequestScreen(
-                            onGrantPermissions = {
-                                permissionsState.launchMultiplePermissionRequest()
-                            },
-                            onDeny = {
-                                finish()
-                            }
+                            onGrantPermissions = { permissionsState.launchMultiplePermissionRequest() },
+                            onDeny = { finish() }
                         )
                     }
                 }
 
-                // Обработка нажатия "Назад" — завершаем звонок
                 BackHandler {
                     CallService.endCall(this@CallActivity)
                     finish()
@@ -134,101 +140,76 @@ class CallActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        // Перезапускаем Activity с новыми параметрами
         recreate()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        // Возвращаем окно в нормальное состояние
         window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        window.clearFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED)
-        window.clearFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON)
     }
 
-    /**
-     * Настройка окна для отображения звонка поверх lock screen
-     */
     private fun setupWindowForCall() {
-        // Показывать поверх lock screen
         setShowWhenLocked(true)
         setTurnScreenOn(true)
-
-        // Держать экран включённым во время звонка
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-
-        // Полноэкранный режим
         WindowCompat.setDecorFitsSystemWindows(window, false)
     }
 }
 
-/**
- * Экран запроса разрешений для звонка
- */
-@androidx.compose.runtime.Composable
+@Composable
 private fun PermissionRequestScreen(
     onGrantPermissions: () -> Unit,
     onDeny: () -> Unit
 ) {
-    androidx.compose.foundation.layout.Column(
-        modifier = androidx.compose.ui.Modifier
+    Column(
+        modifier = Modifier
             .fillMaxSize()
-            .androidx.compose.foundation.background(androidx.compose.ui.graphics.Color(0xFF1A1C2E))
-            .androidx.compose.foundation.layout.padding(24.dp),
-        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
-        verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center
+            .background(Color(0xFF1A1C2E))
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        androidx.compose.material3.Icon(
-            imageVector = androidx.compose.material.icons.Icons.Default.Mic,
+        Icon(
+            imageVector = Icons.Default.Mic,
             contentDescription = null,
-            tint = androidx.compose.ui.graphics.Color.White,
-            modifier = androidx.compose.ui.Modifier.size(64.dp)
+            tint = Color.White,
+            modifier = Modifier.size(64.dp)
         )
 
-        androidx.compose.foundation.layout.Spacer(
-            modifier = androidx.compose.ui.Modifier.height(24.dp)
-        )
+        Spacer(modifier = Modifier.height(24.dp))
 
-        androidx.compose.material3.Text(
+        Text(
             text = "Требуются разрешения",
-            color = androidx.compose.ui.graphics.Color.White,
-            style = androidx.compose.material3.MaterialTheme.typography.headlineMedium
+            color = Color.White,
+            style = MaterialTheme.typography.headlineMedium
         )
 
-        androidx.compose.foundation.layout.Spacer(
-            modifier = androidx.compose.ui.Modifier.height(12.dp)
-        )
+        Spacer(modifier = Modifier.height(12.dp))
 
-        androidx.compose.material3.Text(
+        Text(
             text = "Для совершения звонков необходим доступ к микрофону и камере",
-            color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.7f),
-            style = androidx.compose.material3.MaterialTheme.typography.bodyLarge,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            color = Color.White.copy(alpha = 0.7f),
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center
         )
 
-        androidx.compose.foundation.layout.Spacer(
-            modifier = androidx.compose.ui.Modifier.height(32.dp)
-        )
+        Spacer(modifier = Modifier.height(32.dp))
 
-        androidx.compose.foundation.layout.Row(
-            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(16.dp)
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            androidx.compose.material3.OutlinedButton(
+            OutlinedButton(
                 onClick = onDeny,
-                colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
-                    contentColor = androidx.compose.ui.graphics.Color.White
-                )
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
             ) {
-                androidx.compose.material3.Text("Отмена")
+                Text("Отмена")
             }
 
-            androidx.compose.material3.Button(
+            Button(
                 onClick = onGrantPermissions,
-                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                    containerColor = androidx.compose.ui.graphics.Color(0xFF6366F1)
-                )
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6366F1))
             ) {
-                androidx.compose.material3.Text("Разрешить")
+                Text("Разрешить")
             }
         }
     }

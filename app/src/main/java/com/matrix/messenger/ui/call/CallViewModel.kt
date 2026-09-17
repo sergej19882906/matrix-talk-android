@@ -37,169 +37,71 @@ class CallViewModel @Inject constructor(
     private var callTimerJob: Job? = null
     private var callStartTime: Long = 0L
 
-    // Текущая информация о звонке
-    private var currentCallId: String? = null
-    private var currentRoomId: String? = null
-    private var currentPeerName: String? = null
-    private var currentIsVideo: Boolean = true
-
     init {
-        // Наблюдаем за состоянием звонка из репозитория
         viewModelScope.launch {
             callRepository.callState.collect { state ->
                 _callState.value = state
-                
-                // Запускаем/останавливаем таймер в зависимости от состояния
                 when (state) {
-                    is CallState.Connected -> {
-                        startCallTimer()
-                    }
-                    is CallState.Ended, CallState.Idle -> {
-                        stopCallTimer()
-                    }
+                    is CallState.Connected -> startCallTimer()
+                    is CallState.Ended, CallState.Idle -> stopCallTimer()
                     else -> { /* ignore */ }
                 }
             }
         }
     }
 
-    /**
-     * Начать исходящий звонок
-     */
     fun startCall(roomId: String, peerUserId: String, peerName: String, isVideo: Boolean) {
         viewModelScope.launch {
-            currentRoomId = roomId
-            currentPeerName = peerName
-            currentIsVideo = isVideo
-
             try {
                 callRepository.startCall(roomId, peerUserId, isVideo)
-                
-                // Получаем callId из репозитория (предполагается, что он сохраняется)
-                currentCallId = callRepository.getCurrentCallId()
-                
-                // Запускаем сервис для foreground уведомления
-                currentCallId?.let { callId ->
-                    CallService.startOutgoingCall(
-                        context = context,
-                        callId = callId,
-                        roomId = roomId,
-                        peerName = peerName,
-                        isVideo = isVideo
-                    )
-                }
+                val callId = callRepository.getCurrentCallId() ?: return@launch
+                CallService.startOutgoingCall(context, callId, roomId, peerName, isVideo)
             } catch (e: Exception) {
-                // Обработка ошибки
                 _callState.value = CallState.Ended("Ошибка: ${e.message}")
             }
         }
     }
 
-    /**
-     * Принять входящий звонок
-     */
     fun acceptCall(callId: String, roomId: String, peerName: String, isVideo: Boolean) {
         viewModelScope.launch {
-            currentCallId = callId
-            currentRoomId = roomId
-            currentPeerName = peerName
-            currentIsVideo = isVideo
-
             try {
                 callRepository.acceptCall(callId)
-                
-                // Обновляем сервис - звонок теперь активный
-                CallService.startOutgoingCall(
-                    context = context,
-                    callId = callId,
-                    roomId = roomId,
-                    peerName = peerName,
-                    isVideo = isVideo
-                )
+                CallService.startOutgoingCall(context, callId, roomId, peerName, isVideo)
             } catch (e: Exception) {
                 _callState.value = CallState.Ended("Ошибка: ${e.message}")
             }
         }
     }
 
-    /**
-     * Отклонить входящий звонок
-     */
     fun rejectCall() {
         viewModelScope.launch {
-            try {
-                callRepository.rejectCall()
-                stopSelf()
-            } catch (e: Exception) {
-                // Логируем ошибку
-            }
+            callRepository.rejectCall()
         }
     }
 
-    /**
-     * Завершить звонок
-     */
     fun endCall() {
         viewModelScope.launch {
-            try {
-                callRepository.endCall()
-                CallService.endCall(context)
-            } catch (e: Exception) {
-                // Логируем ошибку
-            }
+            callRepository.endCall()
+            CallService.endCall(context)
         }
     }
 
-    /**
-     * Переключить микрофон (mute/unmute)
-     */
     fun toggleMute() {
-        viewModelScope.launch {
-            val newMutedState = !_isMuted.value
-            _isMuted.value = newMutedState
-            
-            try {
-                callRepository.toggleMute(newMutedState)
-            } catch (e: Exception) {
-                // Возвращаем предыдущее состояние при ошибке
-                _isMuted.value = !newMutedState
-            }
-        }
+        val newMutedState = !_isMuted.value
+        _isMuted.value = newMutedState
+        callRepository.toggleMute(newMutedState)
     }
 
-    /**
-     * Переключить камеру (включить/выключить видео)
-     */
     fun toggleVideo() {
-        viewModelScope.launch {
-            val newVideoState = !_isVideoEnabled.value
-            _isVideoEnabled.value = newVideoState
-            
-            try {
-                callRepository.toggleVideo(newVideoState)
-            } catch (e: Exception) {
-                // Возвращаем предыдущее состояние при ошибке
-                _isVideoEnabled.value = !newVideoState
-            }
-        }
+        val newVideoState = !_isVideoEnabled.value
+        _isVideoEnabled.value = newVideoState
+        callRepository.toggleVideo(newVideoState)
     }
 
-    /**
-     * Переключить камеру (фронтальная/задняя)
-     */
     fun switchCamera() {
-        viewModelScope.launch {
-            try {
-                callRepository.switchCamera()
-            } catch (e: Exception) {
-                // Логируем ошибку
-            }
-        }
+        callRepository.switchCamera()
     }
 
-    /**
-     * Запустить таймер звонка
-     */
     private fun startCallTimer() {
         callStartTime = System.currentTimeMillis()
         callTimerJob?.cancel()
@@ -211,33 +113,20 @@ class CallViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Остановить таймер звонка
-     */
     private fun stopCallTimer() {
         callTimerJob?.cancel()
         callTimerJob = null
         _callDuration.value = 0L
     }
 
-    /**
-     * Форматировать длительность звонка в строку MM:SS
-     */
     fun formatDuration(durationSeconds: Long): String {
         val minutes = durationSeconds / 60
         val seconds = durationSeconds % 60
         return String.format("%02d:%02d", minutes, seconds)
     }
 
-    /**
-     * Очистка ресурсов при уничтожении ViewModel
-     */
     override fun onCleared() {
         super.onCleared()
         callTimerJob?.cancel()
-    }
-
-    private fun stopSelf() {
-        // Этот метод вызывается из сервиса, здесь просто заглушка
     }
 }

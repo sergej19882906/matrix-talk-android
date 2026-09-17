@@ -1,17 +1,10 @@
-
----
-
-### 📄 5. `RELEASE_NOTES.md`
-*Добавлена запись о релизе 1.1.1.*
-
-```markdown
 # Matrix Talk — История версий
 
 ## 1.1.1
 **Дата релиза:** 2026-09-18
 
 ### Что нового
-- 🆕 **Аудио-видео звонки** — полноценная поддержка VoIP через WebRTC:
+- 🆕 **Аудио-видео звонки** — полноценная поддержка VoIP:
   - Исходящие и входящие аудио- и видеозвонки
   - Экран входящего звонка поверх заблокированного экрана
   - Управление микрофоном, камерой, переключение фронтальной/задней камеры
@@ -25,9 +18,6 @@
   - `CallActivity` и `IncomingCallActivity`
   - `CallService` (Foreground Service для Android 14+)
   - `CallScreen`, `CallViewModel`, `CallRepository`, `CallState`
-- 🆕 **Обновлённая навигация**:
-  - Кнопки аудио- и видеозвонка в AppBar чата
-  - Новый маршрут `Screen.Call` в NavGraph
 - 🆕 **Новые зависимости**:
   - `io.getstream:stream-webrtc-android:1.0.0`
   - `com.google.accompanist:accompanist-permissions:0.32.0`
