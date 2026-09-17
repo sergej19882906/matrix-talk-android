@@ -16,7 +16,7 @@
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
 
-    <!-- Разрешения для аудио-видео звонков -->
+    <!-- 🆕 Разрешения для аудио-видео звонков -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
@@ -24,13 +24,13 @@
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
     <uses-permission android:name="android.permission.TURN_SCREEN_ON" />
 
-    <!-- Foreground Service для поддержания звонка (Android 14+) -->
+    <!-- 🆕 Foreground Service для поддержания звонка (Android 14+) -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
 
-    <!-- Bluetooth для гарнитур -->
+    <!-- 🆕 Bluetooth для гарнитур -->
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
 
@@ -61,7 +61,7 @@
             </intent-filter>
         </activity>
 
-        <!-- Активность для активного звонка -->
+        <!-- 🆕 Активность для активного звонка -->
         <activity
             android:name=".ui.call.CallActivity"
             android:exported="false"
@@ -74,7 +74,7 @@
             android:taskAffinity=""
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation" />
 
-        <!-- Активность для входящего звонка -->
+        <!-- 🆕 Активность для входящего звонка -->
         <activity
             android:name=".ui.call.IncomingCallActivity"
             android:exported="false"
@@ -86,7 +86,7 @@
             android:excludeFromRecents="true"
             android:taskAffinity="" />
 
-        <!-- Foreground Service для поддержания звонка в фоне -->
+        <!-- 🆕 Foreground Service для поддержания звонка в фоне -->
         <service
             android:name=".service.CallService"
             android:exported="false"

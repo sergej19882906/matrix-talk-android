@@ -95,7 +95,7 @@ dependencies {
 
     // Image & Video loading
     implementation("io.coil-kt:coil-compose:2.7.0")
-    implementation("io.coil-kt:coil-video:2.7.0")
+    implementation("io.coil-kt:coil-video:2.7.0") // 🆕 Для предпросмотра видео
 
     // DataStore
     implementation("androidx.datastore:datastore-preferences:1.1.1")

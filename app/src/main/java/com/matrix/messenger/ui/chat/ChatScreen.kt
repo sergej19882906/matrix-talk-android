@@ -1,5 +1,6 @@
 package com.matrix.messenger.ui.chat
 
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -24,6 +25,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.matrix.messenger.data.model.Message
 import com.matrix.messenger.data.model.MessageType
+import com.matrix.messenger.ui.call.CallActivity
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -40,6 +42,7 @@ fun ChatScreen(
     val context = LocalContext.current
     var editingMessage by remember { mutableStateOf<Message?>(null) }
     var editText by remember { mutableStateOf("") }
+
     val filePicker = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri ->
@@ -89,6 +92,38 @@ fun ChatScreen(
                     }
                 },
                 actions = {
+                    // 🆕 Кнопка аудио-звонка
+                    IconButton(onClick = {
+                        val intent = CallActivity.newIntent(
+                            context = context,
+                            callId = "",
+                            roomId = roomId,
+                            peerUserId = "", // Заглушка, так как peerUserId не передаётся в ChatScreen напрямую
+                            peerName = uiState.roomName ?: "Чат",
+                            peerAvatarUrl = null,
+                            isVideo = false,
+                            isIncoming = false
+                        )
+                        context.startActivity(intent)
+                    }) {
+                        Icon(Icons.Default.Call, contentDescription = "Аудио звонок")
+                    }
+                    // 🆕 Кнопка видео-звонка
+                    IconButton(onClick = {
+                        val intent = CallActivity.newIntent(
+                            context = context,
+                            callId = "",
+                            roomId = roomId,
+                            peerUserId = "",
+                            peerName = uiState.roomName ?: "Чат",
+                            peerAvatarUrl = null,
+                            isVideo = true,
+                            isIncoming = false
+                        )
+                        context.startActivity(intent)
+                    }) {
+                        Icon(Icons.Default.Videocam, contentDescription = "Видео звонок")
+                    }
                     IconButton(onClick = viewModel::leaveRoom) {
                         Icon(Icons.Default.MoreVert, contentDescription = "Ещё")
                     }
@@ -203,7 +238,6 @@ private fun MessageItem(
                     placeholder = painterResource(android.R.drawable.ic_menu_myplaces)
                 )
             }
-
             Column {
                 if (!message.isMine) {
                     Text(
@@ -212,7 +246,6 @@ private fun MessageItem(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-
                 Box {
                     Surface(
                         shape = RoundedCornerShape(
@@ -243,7 +276,6 @@ private fun MessageItem(
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
-
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 verticalAlignment = Alignment.CenterVertically
@@ -253,7 +285,6 @@ private fun MessageItem(
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
-
                                 if (message.isEdited) {
                                     Text(
                                         text = "(ред.)",
@@ -306,7 +337,6 @@ private fun MessageItem(
                     }
                 }
             }
-
             if (message.isMine) {
                 Spacer(modifier = Modifier.width(32.dp))
             }
@@ -369,7 +399,6 @@ private fun MessageInputBar(
                 }
                 Spacer(modifier = Modifier.height(4.dp))
             }
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Bottom
@@ -382,16 +411,13 @@ private fun MessageInputBar(
                     maxLines = 4,
                     shape = RoundedCornerShape(24.dp)
                 )
-
                 Spacer(modifier = Modifier.width(8.dp))
-
                 IconButton(
                     onClick = onFileSelected,
                     modifier = Modifier.size(48.dp)
                 ) {
                     Icon(Icons.Default.AttachFile, contentDescription = "Прикрепить файл")
                 }
-
                 IconButton(
                     onClick = onSend,
                     enabled = value.isNotBlank(),
