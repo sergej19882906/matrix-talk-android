@@ -15,46 +15,38 @@ import java.net.URLEncoder
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    startDestination: String = Screen.Login.route
+    startDestination: String = "login"
 ) {
     NavHost(
         navController = navController,
         startDestination = startDestination
     ) {
         // Экран входа
-        composable(Screen.Login.route) {
+        composable("login") {
             LoginScreen(
                 onLoginSuccess = {
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
+                    navController.navigate("home") {
+                        popUpTo("login") { inclusive = true }
                     }
                 }
             )
         }
 
         // Главный экран (список чатов)
-        composable(Screen.Home.route) {
+        composable("home") {
             HomeScreen(
                 onChatClick = { roomId, peerUserId, peerName, peerAvatarUrl ->
                     // Кодируем параметры для безопасной передачи через URL
-                    val encodedPeerName = URLEncoder.encode(peerName, "UTF-8")
-                    val encodedAvatarUrl = peerAvatarUrl?.let { URLEncoder.encode(it, "UTF-8") } ?: ""
-                    
-                    navController.navigate(
-                        Screen.Chat.createRoute(
-                            roomId = roomId,
-                            peerUserId = peerUserId,
-                            peerName = encodedPeerName,
-                            peerAvatarUrl = encodedAvatarUrl
-                        )
-                    )
+                    val encodedName = URLEncoder.encode(peerName, "UTF-8")
+                    val encodedAvatar = URLEncoder.encode(peerAvatarUrl ?: "", "UTF-8")
+                    navController.navigate("chat/$roomId/$peerUserId/$encodedName/$encodedAvatar")
                 }
             )
         }
 
         // Экран чата
         composable(
-            route = Screen.Chat.route,
+            route = "chat/{roomId}/{peerUserId}/{peerName}/{peerAvatarUrl}",
             arguments = listOf(
                 navArgument("roomId") { type = NavType.StringType },
                 navArgument("peerUserId") { type = NavType.StringType },
@@ -62,17 +54,30 @@ fun NavGraph(
                 navArgument("peerAvatarUrl") { 
                     type = NavType.StringType
                     nullable = true
-                    defaultValue = ""
+                    // Убрали defaultValue = "", так как он вызывает ошибку вывода типов в Nav 2.8.x
                 }
             )
         ) { backStackEntry ->
-            val roomId = backStackEntry.arguments?.getString("roomId") ?: return@composable
-            val peerUserId = backStackEntry.arguments?.getString("peerUserId") ?: return@composable
-            val peerName = backStackEntry.arguments?.getString("peerName")?.let { 
-                URLDecoder.decode(it, "UTF-8") 
-            } ?: "Неизвестный"
-            val peerAvatarUrl = backStackEntry.arguments?.getString("peerAvatarUrl")?.let { 
-                if (it.isNotEmpty()) URLDecoder.decode(it, "UTF-8") else null
+            val roomId = backStackEntry.arguments?.getString("roomId") ?: ""
+            val peerUserId = backStackEntry.arguments?.getString("peerUserId") ?: ""
+            val peerNameEncoded = backStackEntry.arguments?.getString("peerName") ?: ""
+            val peerAvatarUrlEncoded = backStackEntry.arguments?.getString("peerAvatarUrl")
+
+            // Безопасное декодирование без цепочек let, чтобы не сбивать компилятор
+            val peerName = try {
+                URLDecoder.decode(peerNameEncoded, "UTF-8")
+            } catch (e: Exception) {
+                peerNameEncoded
+            }
+
+            val peerAvatarUrl = if (!peerAvatarUrlEncoded.isNullOrEmpty()) {
+                try {
+                    URLDecoder.decode(peerAvatarUrlEncoded, "UTF-8")
+                } catch (e: Exception) {
+                    peerAvatarUrlEncoded
+                }
+            } else {
+                null
             }
 
             ChatScreen(
@@ -82,47 +87,6 @@ fun NavGraph(
                 peerAvatarUrl = peerAvatarUrl,
                 navController = navController
             )
-        }
-
-        // 🆕 Экран звонка (опционально, если хотите открывать в том же приложении)
-        composable(
-            route = Screen.Call.route,
-            arguments = listOf(
-                navArgument("callId") { type = NavType.StringType },
-                navArgument("roomId") { type = NavType.StringType },
-                navArgument("peerUserId") { type = NavType.StringType },
-                navArgument("peerName") { type = NavType.StringType },
-                navArgument("peerAvatarUrl") { 
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = ""
-                },
-                navArgument("isVideo") { type = NavType.BoolType },
-                navArgument("isIncoming") { type = NavType.BoolType }
-            )
-        ) { backStackEntry ->
-            val callId = backStackEntry.arguments?.getString("callId") ?: ""
-            val roomId = backStackEntry.arguments?.getString("roomId") ?: ""
-            val peerUserId = backStackEntry.arguments?.getString("peerUserId") ?: ""
-            val peerName = backStackEntry.arguments?.getString("peerName")?.let { 
-                URLDecoder.decode(it, "UTF-8") 
-            } ?: "Неизвестный"
-            val peerAvatarUrl = backStackEntry.arguments?.getString("peerAvatarUrl")?.let { 
-                if (it.isNotEmpty()) URLDecoder.decode(it, "UTF-8") else null
-            }
-            val isVideo = backStackEntry.arguments?.getBoolean("isVideo") ?: false
-            val isIncoming = backStackEntry.arguments?.getBoolean("isIncoming") ?: false
-
-            // Здесь можно использовать CallScreen напрямую, если не хотите отдельную Activity
-            // com.matrix.messenger.ui.call.CallScreen(
-            //     roomId = roomId,
-            //     peerUserId = peerUserId,
-            //     peerName = peerName,
-            //     peerAvatarUrl = peerAvatarUrl,
-            //     isVideo = isVideo,
-            //     isOutgoing = !isIncoming,
-            //     onCallEnded = { navController.popBackStack() }
-            // )
         }
     }
 }
