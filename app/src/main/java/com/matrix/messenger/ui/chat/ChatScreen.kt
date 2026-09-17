@@ -1,6 +1,5 @@
 package com.matrix.messenger.ui.chat
 
-import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -25,7 +24,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.matrix.messenger.data.model.Message
 import com.matrix.messenger.data.model.MessageType
-import com.matrix.messenger.ui.call.CallActivity
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -94,11 +92,11 @@ fun ChatScreen(
                 actions = {
                     // 🆕 Кнопка аудио-звонка
                     IconButton(onClick = {
-                        val intent = CallActivity.newIntent(
+                        val intent = com.matrix.messenger.ui.call.CallActivity.newIntent(
                             context = context,
                             callId = "",
                             roomId = roomId,
-                            peerUserId = "", // Заглушка, так как peerUserId не передаётся в ChatScreen напрямую
+                            peerUserId = "",
                             peerName = uiState.roomName ?: "Чат",
                             peerAvatarUrl = null,
                             isVideo = false,
@@ -110,7 +108,7 @@ fun ChatScreen(
                     }
                     // 🆕 Кнопка видео-звонка
                     IconButton(onClick = {
-                        val intent = CallActivity.newIntent(
+                        val intent = com.matrix.messenger.ui.call.CallActivity.newIntent(
                             context = context,
                             callId = "",
                             roomId = roomId,
