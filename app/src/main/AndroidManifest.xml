@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Базовые разрешения для работы мессенджера -->
+    <!-- Базовые разрешения -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.VIBRATE" />
@@ -10,37 +10,30 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <!-- Разрешения для передачи файлов -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="29"
-        tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" tools:ignore="ScopedStorage" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
 
-    <!-- 🆕 Разрешения для аудио-видео звонков -->
+    <!-- Разрешения для аудио-видео звонков -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
+    <uses-permission android:name="android.permission.TURN_SCREEN_ON" />
 
-    <!-- 🆕 Foreground Service для поддержания звонка -->
+    <!-- Foreground Service для поддержания звонка (Android 14+) -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
 
-    <!-- 🆕 Bluetooth для работы с гарнитурами -->
-    <uses-permission android:name="android.permission.BLUETOOTH"
-        android:maxSdkVersion="30" />
+    <!-- Bluetooth для гарнитур -->
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
 
-    <!-- 🆕 Для показа звонка на заблокированном экране -->
-    <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
-    <uses-permission android:name="android.permission.TURN_SCREEN_ON" />
-
-    <!-- Указываем, что приложение использует камеру и микрофон (не обязательно) -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
     <uses-feature android:name="android.hardware.microphone" android:required="false" />
@@ -57,7 +50,6 @@
         android:theme="@style/Theme.MatrixMessenger"
         tools:targetApi="34">
 
-        <!-- Основная активность -->
         <activity
             android:name=".ui.MainActivity"
             android:exported="true"
@@ -69,7 +61,7 @@
             </intent-filter>
         </activity>
 
-        <!-- 🆕 Активность для активного звонка -->
+        <!-- Активность для активного звонка -->
         <activity
             android:name=".ui.call.CallActivity"
             android:exported="false"
@@ -82,7 +74,7 @@
             android:taskAffinity=""
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation" />
 
-        <!-- 🆕 Активность для входящего звонка -->
+        <!-- Активность для входящего звонка -->
         <activity
             android:name=".ui.call.IncomingCallActivity"
             android:exported="false"
@@ -94,7 +86,7 @@
             android:excludeFromRecents="true"
             android:taskAffinity="" />
 
-        <!-- 🆕 Foreground Service для поддержания звонка в фоне -->
+        <!-- Foreground Service для поддержания звонка в фоне -->
         <service
             android:name=".service.CallService"
             android:exported="false"

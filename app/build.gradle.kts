@@ -86,7 +86,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.9.0")
 
-    // Matrix SDK (element-android)
+    // Matrix SDK
     implementation("org.matrix.android:matrix-android-sdk2:1.6.62")
 
     // Network
@@ -106,7 +106,7 @@ dependencies {
     // 🆕 WebRTC для аудио-видео звонков
     implementation("io.getstream:stream-webrtc-android:1.0.0")
 
-    // 🆕 Permissions (для запроса доступа к камере и микрофону)
+    // 🆕 Permissions для запроса доступа к камере и микрофону
     implementation("com.google.accompanist:accompanist-permissions:0.32.0")
 
     // Testing

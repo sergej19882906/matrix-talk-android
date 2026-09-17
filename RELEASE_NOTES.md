@@ -1,3 +1,10 @@
+
+---
+
+### 📄 5. `RELEASE_NOTES.md`
+*Добавлена запись о релизе 1.1.1.*
+
+```markdown
 # Matrix Talk — История версий
 
 ## 1.1.1
@@ -6,32 +13,27 @@
 ### Что нового
 - 🆕 **Аудио-видео звонки** — полноценная поддержка VoIP через WebRTC:
   - Исходящие и входящие аудио- и видеозвонки
-  - Экран входящего звонка поверх заблокированного экрана (как в WhatsApp/Telegram)
-  - Управление микрофоном (mute/unmute), камерой (вкл/выкл), переключение фронтальной/задней камеры
+  - Экран входящего звонка поверх заблокированного экрана
+  - Управление микрофоном, камерой, переключение фронтальной/задней камеры
   - Foreground Service для поддержания звонка в фоне
   - Уведомления с кнопками «Принять», «Отклонить», «Завершить»
-  - Таймер длительности звонка
-  - Анимированный UI с пульсацией аватара при вызове
+  - Таймер длительности звонка и анимированный UI
 - 🆕 **Улучшенная передача файлов**:
   - Предпросмотр видео в чате (Coil Video)
   - Прогресс-бар загрузки/скачивания файлов
-  - Поддержка Drag-and-Drop для файлов
 - 🆕 **Новые компоненты**:
-  - `CallActivity` и `IncomingCallActivity` — полноэкранные Activity для звонков
-  - `CallService` — Foreground Service для Android 14+ (API 34)
-  - `CallScreen` — Compose UI экрана звонка
-  - `CallViewModel` и `CallRepository` — логика и интеграция с Matrix SDK VoIP
-  - `CallState` — модель состояний звонка (Idle, Incoming, Outgoing, Connected, Ended)
+  - `CallActivity` и `IncomingCallActivity`
+  - `CallService` (Foreground Service для Android 14+)
+  - `CallScreen`, `CallViewModel`, `CallRepository`, `CallState`
 - 🆕 **Обновлённая навигация**:
   - Кнопки аудио- и видеозвонка в AppBar чата
   - Новый маршрут `Screen.Call` в NavGraph
-  - URL-кодирование параметров навигации
 - 🆕 **Новые зависимости**:
-  - `io.getstream:stream-webrtc-android:1.0.0` — WebRTC
-  - `com.google.accompanist:accompanist-permissions:0.32.0` — запрос разрешений
-  - `io.coil-kt:coil-video:2.7.0` — предпросмотр видео
+  - `io.getstream:stream-webrtc-android:1.0.0`
+  - `com.google.accompanist:accompanist-permissions:0.32.0`
+  - `io.coil-kt:coil-video:2.7.0`
 - 🔧 Обновлён `AndroidManifest.xml`:
-  - Добавлены разрешения: `CAMERA`, `RECORD_AUDIO`, `MODIFY_AUDIO_SETTINGS`, `USE_FULL_SCREEN_INTENT`, `FOREGROUND_SERVICE_CAMERA/MICROPHONE/PHONE_CALL`, `BLUETOOTH_CONNECT`, `DISABLE_KEYGUARD`, `TURN_SCREEN_ON`
+  - Добавлены разрешения для камеры, микрофона, Bluetooth и Foreground Service
   - `tools:targetApi` обновлён до 34
 
 ### Сборка
@@ -39,9 +41,6 @@
 - `versionName`: 1.1.1
 - Минимальная версия Android: API 24
 - Целевая версия Android: API 35
-
-### Проверка
-- `./gradlew.bat assembleDebug` — успешно.
 
 ---
 
@@ -56,13 +55,7 @@
 - Добавлена отправка изображений, видео, аудио и файлов.
 - Добавлены реакции, редактирование и удаление сообщений.
 - Добавлена поддержка прямых и групповых комнат, нескольких серверов и тёмной темы.
-- Добавлены демонстрационные скриншоты интерфейса.
 
 ### Сборка
 - `versionCode`: 2
 - `versionName`: 1.1
-- Минимальная версия Android: API 24
-- Целевая версия Android: API 35
-
-### Проверка
-- `./gradlew.bat assembleDebug` — успешно.
