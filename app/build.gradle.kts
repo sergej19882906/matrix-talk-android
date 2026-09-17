@@ -14,9 +14,8 @@ android {
         applicationId = "com.matrix.messenger"
         minSdk = 24
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.1"
-
+        versionCode = 3
+        versionName = "1.1.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
@@ -32,16 +31,20 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
     kotlinOptions {
         jvmTarget = "17"
     }
+
     buildFeatures {
         compose = true
     }
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -90,14 +93,21 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
 
-    // Image loading
+    // Image & Video loading
     implementation("io.coil-kt:coil-compose:2.7.0")
+    implementation("io.coil-kt:coil-video:2.7.0")
 
     // DataStore
     implementation("androidx.datastore:datastore-preferences:1.1.1")
 
     // Security
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
+
+    // 🆕 WebRTC для аудио-видео звонков
+    implementation("io.getstream:stream-webrtc-android:1.0.0")
+
+    // 🆕 Permissions (для запроса доступа к камере и микрофону)
+    implementation("com.google.accompanist:accompanist-permissions:0.32.0")
 
     // Testing
     testImplementation("junit:junit:4.13.2")
