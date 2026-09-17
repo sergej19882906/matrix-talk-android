@@ -1,5 +1,6 @@
 package com.matrix.messenger.ui.chat
 
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,7 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.matrix.messenger.data.model.Message
-import com.matrix.messenger.data.model.MessageType
+import com.matrix.messenger.ui.call.CallActivity
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -74,9 +75,7 @@ fun ChatScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = uiState.roomName ?: "Чат",
                             maxLines = 1,
@@ -92,7 +91,7 @@ fun ChatScreen(
                 actions = {
                     // 🆕 Кнопка аудио-звонка
                     IconButton(onClick = {
-                        val intent = com.matrix.messenger.ui.call.CallActivity.newIntent(
+                        val intent = CallActivity.newIntent(
                             context = context,
                             callId = "",
                             roomId = roomId,
@@ -108,7 +107,7 @@ fun ChatScreen(
                     }
                     // 🆕 Кнопка видео-звонка
                     IconButton(onClick = {
-                        val intent = com.matrix.messenger.ui.call.CallActivity.newIntent(
+                        val intent = CallActivity.newIntent(
                             context = context,
                             callId = "",
                             roomId = roomId,
@@ -122,7 +121,7 @@ fun ChatScreen(
                     }) {
                         Icon(Icons.Default.Videocam, contentDescription = "Видео звонок")
                     }
-                    IconButton(onClick = viewModel::leaveRoom) {
+                    IconButton(onClick = { viewModel.leaveRoom() }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "Ещё")
                     }
                 }
@@ -147,10 +146,7 @@ fun ChatScreen(
         ) {
             when {
                 uiState.isLoading -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator()
                     }
                 }
@@ -161,7 +157,10 @@ fun ChatScreen(
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        items(uiState.messages, key = { it.eventId }) { message ->
+                        items(
+                            items = uiState.messages,
+                            key = { it.eventId }
+                        ) { message ->
                             MessageItem(
                                 message = message,
                                 onReaction = { viewModel.sendReaction(message.eventId, "👍") },
@@ -230,9 +229,7 @@ private fun MessageItem(
                 AsyncImage(
                     model = message.senderId,
                     contentDescription = message.senderName,
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape),
+                    modifier = Modifier.size(32.dp).clip(CircleShape),
                     placeholder = painterResource(android.R.drawable.ic_menu_myplaces)
                 )
             }
@@ -258,9 +255,7 @@ private fun MessageItem(
                             MaterialTheme.colorScheme.surfaceVariant
                         }
                     ) {
-                        Column(
-                            modifier = Modifier.padding(12.dp)
-                        ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
                             if (message.isDeleted) {
                                 Text(
                                     text = "Сообщение удалено",
@@ -295,9 +290,7 @@ private fun MessageItem(
                     }
                     IconButton(
                         onClick = { menuExpanded = true },
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .size(28.dp)
+                        modifier = Modifier.align(Alignment.TopEnd).size(28.dp)
                     ) {
                         Icon(
                             Icons.Default.MoreVert,
@@ -355,28 +348,18 @@ private fun MessageInputBar(
         tonalElevation = 2.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp)
-        ) {
+        Column(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
             if (replyingTo != null) {
                 Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp)),
+                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)),
                     color = MaterialTheme.colorScheme.surfaceVariant
                 ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp),
+                        modifier = Modifier.fillMaxWidth().padding(8.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column(
-                            modifier = Modifier.weight(1f)
-                        ) {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = "Ответ: ${replyingTo.senderName?.substringBefore(":")}",
                                 style = MaterialTheme.typography.bodySmall,
@@ -422,11 +405,7 @@ private fun MessageInputBar(
                     modifier = Modifier.size(48.dp)
                 ) {
                     Icon(
-                        imageVector = if (value.isNotBlank()) {
-                            Icons.Default.Send
-                        } else {
-                            Icons.Default.Mic
-                        },
+                        imageVector = if (value.isNotBlank()) Icons.Default.Send else Icons.Default.Mic,
                         contentDescription = "Отправить",
                         tint = if (value.isNotBlank()) {
                             MaterialTheme.colorScheme.primary
