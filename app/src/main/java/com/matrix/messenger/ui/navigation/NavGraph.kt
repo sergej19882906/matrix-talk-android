@@ -21,7 +21,6 @@ fun NavGraph(
         navController = navController,
         startDestination = startDestination
     ) {
-        // Экран входа
         composable("login") {
             LoginScreen(
                 onLoginSuccess = {
@@ -32,11 +31,10 @@ fun NavGraph(
             )
         }
 
-        // Главный экран (список чатов)
         composable("home") {
             HomeScreen(
                 onChatClick = { roomId, peerUserId, peerName, peerAvatarUrl ->
-                    // Кодируем параметры для безопасной передачи через URL
+                    // Кодируем параметры. Пустой аватар кодируется как пустая строка
                     val encodedName = URLEncoder.encode(peerName, "UTF-8")
                     val encodedAvatar = URLEncoder.encode(peerAvatarUrl ?: "", "UTF-8")
                     navController.navigate("chat/$roomId/$peerUserId/$encodedName/$encodedAvatar")
@@ -44,33 +42,28 @@ fun NavGraph(
             )
         }
 
-        // Экран чата
         composable(
             route = "chat/{roomId}/{peerUserId}/{peerName}/{peerAvatarUrl}",
             arguments = listOf(
                 navArgument("roomId") { type = NavType.StringType },
                 navArgument("peerUserId") { type = NavType.StringType },
                 navArgument("peerName") { type = NavType.StringType },
-                navArgument("peerAvatarUrl") { 
-                    type = NavType.StringType
-                    nullable = true
-                    // Убрали defaultValue = "", так как он вызывает ошибку вывода типов в Nav 2.8.x
-                }
+                // Убрали nullable = true, чтобы избежать бага вывода типов в Nav 2.8.x
+                navArgument("peerAvatarUrl") { type = NavType.StringType } 
             )
         ) { backStackEntry ->
             val roomId = backStackEntry.arguments?.getString("roomId") ?: ""
             val peerUserId = backStackEntry.arguments?.getString("peerUserId") ?: ""
             val peerNameEncoded = backStackEntry.arguments?.getString("peerName") ?: ""
-            val peerAvatarUrlEncoded = backStackEntry.arguments?.getString("peerAvatarUrl")
+            val peerAvatarUrlEncoded = backStackEntry.arguments?.getString("peerAvatarUrl") ?: ""
 
-            // Безопасное декодирование без цепочек let, чтобы не сбивать компилятор
             val peerName = try {
                 URLDecoder.decode(peerNameEncoded, "UTF-8")
             } catch (e: Exception) {
                 peerNameEncoded
             }
 
-            val peerAvatarUrl = if (!peerAvatarUrlEncoded.isNullOrEmpty()) {
+            val peerAvatarUrl = if (peerAvatarUrlEncoded.isNotEmpty()) {
                 try {
                     URLDecoder.decode(peerAvatarUrlEncoded, "UTF-8")
                 } catch (e: Exception) {
