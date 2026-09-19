@@ -5,13 +5,12 @@ import com.matrix.messenger.data.model.CallState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import org.matrix.android.sdk.api.session.Session
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class CallRepository @Inject constructor(
-    private val session: Session
+    private val matrixRepository: MatrixRepository
 ) {
     private val _callState = MutableStateFlow<CallState>(CallState.Idle)
     val callState: StateFlow<CallState> = _callState.asStateFlow()
@@ -20,11 +19,12 @@ class CallRepository @Inject constructor(
     private var currentCallId: String? = null
 
     suspend fun startCall(roomId: String, peerUserId: String, isVideo: Boolean) {
+        val session = matrixRepository.getCurrentSession() ?: throw IllegalStateException("Пользователь не авторизован")
         val room = session.roomService().getRoom(roomId)
             ?: throw IllegalStateException("Комната не найдена: $roomId")
-        
+
         val peerName = session.userService().getUser(peerUserId)?.displayName ?: "Неизвестный"
-        
+
         currentCallId = "call_${System.currentTimeMillis()}"
         currentCall = CallSession(
             callId = currentCallId!!,

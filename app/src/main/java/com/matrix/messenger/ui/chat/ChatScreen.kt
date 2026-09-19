@@ -1,7 +1,6 @@
 package com.matrix.messenger.ui.chat
 
 import android.content.Intent
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -89,7 +88,6 @@ fun ChatScreen(
                     }
                 },
                 actions = {
-                    // 🆕 Кнопка аудио-звонка
                     IconButton(onClick = {
                         val intent = CallActivity.newIntent(
                             context = context,
@@ -105,7 +103,6 @@ fun ChatScreen(
                     }) {
                         Icon(Icons.Default.Call, contentDescription = "Аудио звонок")
                     }
-                    // 🆕 Кнопка видео-звонка
                     IconButton(onClick = {
                         val intent = CallActivity.newIntent(
                             context = context,
@@ -389,8 +386,8 @@ private fun MessageInputBar(
                     onValueChange = onValueChange,
                     placeholder = { Text("Сообщение...") },
                     modifier = Modifier.weight(1f),
-                    maxLines = 4,
-                    shape = RoundedCornerShape(24.dp)
+                    shape = RoundedCornerShape(24.dp),
+                    maxLines = 4
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 IconButton(

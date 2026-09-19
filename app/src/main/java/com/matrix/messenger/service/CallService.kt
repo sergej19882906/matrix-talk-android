@@ -26,7 +26,7 @@ class CallService : Service() {
                 putExtra("peerName", peerName)
                 putExtra("isVideo", isVideo)
             }
-            ServiceCompat.startForegroundService(context, intent, ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL)
+            androidx.core.content.ContextCompat.startForegroundService(context, intent)
         }
 
         fun endCall(context: Context) {

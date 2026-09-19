@@ -136,4 +136,9 @@ interface MatrixRepository {
      * Установить отображаемое имя
      */
     suspend fun setDisplayName(name: String)
+
+    /**
+     * Получить текущую активную сессию
+     */
+    fun getCurrentSession(): org.matrix.android.sdk.api.session.Session?
 }

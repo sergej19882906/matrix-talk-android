@@ -646,4 +646,8 @@ class MatrixRepositoryImpl @Inject constructor(
             messageType = type
         )
     }
+
+    override fun getCurrentSession(): org.matrix.android.sdk.api.session.Session? {
+        return session
+    }
 }
