@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*' # Запускать при пуше любого тега, начинающегося с 'v'
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
