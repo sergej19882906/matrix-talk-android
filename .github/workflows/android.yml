@@ -77,9 +77,15 @@ jobs:
       - name: Validate docker-compose.bridges.yml
         run: |
           cp .env.example .env
+          sed -i 's/replace-with-a-long-random-password/testpass123/g' .env
+          sed -i 's/replace-with-a-long-random-secret/testsecret123/g' .env
+          sed -i 's/replace-with-another-random-secret/testadminsecret123/g' .env
           docker compose -f docker-compose.bridges.yml config --quiet
 
       - name: Validate docker-compose.arm64.yml override
         run: |
           cp .env.example .env
+          sed -i 's/replace-with-a-long-random-password/testpass123/g' .env
+          sed -i 's/replace-with-a-long-random-secret/testsecret123/g' .env
+          sed -i 's/replace-with-another-random-secret/testadminsecret123/g' .env
           docker compose -f docker-compose.bridges.yml -f docker-compose.arm64.yml config --quiet

@@ -43,16 +43,17 @@ Android-клиент Matrix Talk для децентрализованной с�
 
 ## Сервер
 
-`docker-compose.bridges.yml` — готовый стек для собственного Matrix-сервера:
+`docker-compose.bridges.yml` — готовый стек для собственного Matrix-сервера.
+Кастомные Docker-образы с авто-конфигурацией из env-переменных публикуются в [ghcr.io](https://github.com/sergej19882906/matrix-talk-android/pkgs/container/).
 
-| Сервис | Назначение |
-|--------|------------|
-| **Synapse** | Matrix homeserver |
-| **PostgreSQL** | База данных |
-| **Coturn** | TURN/STUN сервер для VoIP-звонков |
-| **mautrix-telegram** | Мост Telegram |
-| **mautrix-whatsapp** | Мост WhatsApp |
-| **mautrix-signal** | Мост Signal |
+| Сервис | Образ | Назначение |
+|--------|-------|------------|
+| **Synapse** | `ghcr.io/sergej19882906/matrix-talk-synapse` | Matrix homeserver |
+| **PostgreSQL** | `postgres:16-alpine` | База данных |
+| **Coturn** | `coturn/coturn:latest` | TURN/STUN сервер для VoIP-звонков |
+| **mautrix-telegram** | `ghcr.io/sergej19882906/matrix-talk-mautrix-telegram` | Мост Telegram |
+| **mautrix-whatsapp** | `ghcr.io/sergej19882906/matrix-talk-mautrix-whatsapp` | Мост WhatsApp |
+| **mautrix-signal** | `ghcr.io/sergej19882906/matrix-talk-mautrix-signal` | Мост Signal |
 
 Пошаговая инструкция по установке и настройке — в [`docs/bridges.md`](docs/bridges.md).
 

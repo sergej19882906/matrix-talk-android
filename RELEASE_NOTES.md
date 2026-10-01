@@ -26,9 +26,12 @@
 
 ### Сервер (Docker)
 - 🆕 **Coturn** — TURN/STUN сервер для VoIP-звонков (без него звонки работают только в LAN).
+- 🆕 **Кастомные Docker-образы** с авто-конфигурацией из env-переменных — Synapse и мосты настраиваются автоматически при первом запуске, ручная генерация и редактирование конфигов не требуется.
+- 🆕 **ghcr.io** — образы публикуются в GitHub Container Registry (`ghcr.io/sergej19882906/matrix-talk-*`), поддерживаются `linux/amd64` и `linux/arm64`.
+- 🆕 **init-bridges-db** — однократный сервис для автоматического создания баз данных мостов в PostgreSQL.
 - Конфиги мостов маунтятся `:ro` в контейнер Synapse для appservice registration.
 - Полная инструкция по установке сервера в `docs/bridges.md` (на русском).
-- `.env.example` расширен: `TURN_SHARED_SECRET`, `SYNAPSE_REGISTRATION_SHARED_SECRET`, порты Coturn.
+- `.env.example` расширен: `TURN_SHARED_SECRET`, `SYNAPSE_REGISTRATION_SHARED_SECRET`, `TELEGRAM_API_ID`, `TELEGRAM_API_HASH`, `BRIDGE_ADMIN`, порты Coturn.
 
 ### Очистка зависимостей
 - Удалена `security-crypto:1.1.0-alpha06` (alpha, не использовалась).
@@ -39,6 +42,7 @@
 - GitHub Actions собирает signed release APK из секретов.
 - Debug-сборка на pull request.
 - Валидация `docker-compose.bridges.yml` и ARM64 override.
+- 🆕 **Docker CI** — автоматическая сборка и пуш кастомных образов (Synapse + 3 моста) в ghcr.io для `linux/amd64` + `linux/arm64` при пуше в main и при создании тега `v*`.
 - `.dockerignore` добавлен.
 
 ### Сборка
