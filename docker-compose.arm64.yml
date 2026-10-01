@@ -5,6 +5,9 @@ services:
   postgres:
     platform: linux/arm64
 
+  coturn:
+    platform: linux/arm64
+
   telegram-bridge:
     platform: linux/arm64
 

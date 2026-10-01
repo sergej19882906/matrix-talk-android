@@ -11,18 +11,45 @@ services:
       SYNAPSE_SERVER_NAME: ${MATRIX_SERVER_NAME:?Set MATRIX_SERVER_NAME in .env}
       SYNAPSE_REPORT_STATS: "no"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
   postgres:
     image: postgres:16-alpine
     container_name: matrix-talk-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: synapse
+      POSTGRES_USER: ${POSTGRES_USER:-synapse}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
-      POSTGRES_DB: synapse
+      POSTGRES_DB: ${POSTGRES_DB:-synapse}
     volumes:
       - ./server-data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-synapse}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  coturn:
+    image: coturn/coturn:latest
+    container_name: matrix-talk-coturn
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./server-data/coturn:/etc/coturn
+    command:
+      - "--listening-port=${TURN_PORT:-3478}"
+      - "--tls-listening-port=${TURN_TLS_PORT:-5349}"
+      - "--realm=${MATRIX_SERVER_NAME:?Set MATRIX_SERVER_NAME in .env}"
+      - "--server-name=${MATRIX_SERVER_NAME:?Set MATRIX_SERVER_NAME in .env}"
+      - "--use-auth-secret"
+      - "--static-auth-secret=${TURN_SHARED_SECRET:?Set TURN_SHARED_SECRET in .env}"
+      - "--min-port=${TURN_MIN_PORT:-49152}"
+      - "--max-port=${TURN_MAX_PORT:-65535}"
+      - "--log-file=stdout"
+      - "--fingerprint"
+      - "--no-multicast-peers"
+      - "--no-cli"
 
   telegram-bridge:
     image: dock.mau.dev/mautrix/telegram:latest
@@ -32,7 +59,8 @@ services:
     volumes:
       - ./server-data/mautrix-telegram:/data
     depends_on:
-      - synapse
+      synapse:
+        condition: service_started
 
   whatsapp-bridge:
     image: dock.mau.dev/mautrix/whatsapp:latest
@@ -42,7 +70,8 @@ services:
     volumes:
       - ./server-data/mautrix-whatsapp:/data
     depends_on:
-      - synapse
+      synapse:
+        condition: service_started
 
   signal-bridge:
     image: dock.mau.dev/mautrix/signal:latest
@@ -52,4 +81,5 @@ services:
     volumes:
       - ./server-data/mautrix-signal:/data
     depends_on:
-      - synapse
+      synapse:
+        condition: service_started
