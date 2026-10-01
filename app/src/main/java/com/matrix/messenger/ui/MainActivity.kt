@@ -1,6 +1,7 @@
 package com.matrix.messenger.ui
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -26,6 +27,10 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
+    companion object {
+        private const val TAG = "MainActivity"
+    }
+
     @Inject
     lateinit var matrixRepository: MatrixRepository
 
@@ -37,11 +42,16 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         lifecycleScope.launch {
-            matrixRepository.initialize()
-            isAuthenticated = matrixRepository.currentUser.first() != null
-            isReady = true
-            if (isAuthenticated) {
-                requestBatteryBypassIfNeeded()
+            try {
+                matrixRepository.initialize()
+                isAuthenticated = matrixRepository.currentUser.first() != null
+                isReady = true
+                if (isAuthenticated) {
+                    requestBatteryBypassIfNeeded()
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to initialize", e)
+                isReady = true
             }
         }
 
@@ -68,8 +78,12 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun requestBatteryBypassIfNeeded() {
-        window.decorView.post {
-            OemBatteryHelper.requestBatteryOptimizationBypass(this)
+        try {
+            window.decorView.post {
+                OemBatteryHelper.requestBatteryOptimizationBypass(this)
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Battery bypass request failed", e)
         }
     }
 }
