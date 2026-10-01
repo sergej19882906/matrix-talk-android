@@ -3,30 +3,43 @@
 ## 1.1.4
 **Дата релиза:** 2026-10-01
 
-### Что нового
-- 🔧 **Совместимость с Android 15/16 (HyperOS 3/4, One UI и др.)**:
-  - Исправлен краш при запуске на Android 12+ — тема `Theme.SplashScreen` для `installSplashScreen()`.
-  - Устранён конфликт `enableEdgeToEdge()` и `window.statusBarColor` на Android 15+.
-  - `CallActivity` и `IncomingCallActivity` используют отдельную тему без splash screen.
-  - `compileSdk`/`targetSdk` обновлены до 36 (Android 16).
-- 🔋 **Выживание на OEM-оболочках** (Samsung, Xiaomi, Huawei, Oppo, OnePlus, Vivo):
-  - Запрос отключения оптимизации батареи после авторизации.
-  - `BootReceiver` для восстановления после перезагрузки устройства.
-  - `OemBatteryHelper` — открытие OEM-специфичных экранов настроек батареи/автозапуска.
-  - Централизованные каналы уведомлений (звонки, сообщения, синхронизация).
-- 🛡 **Foreground Service**:
-  - Проверка разрешений camera/microphone перед стартом с соответствующими типами.
-  - Обработка `SecurityException` при запуске foreground service.
-- 🧹 **Очистка зависимостей**:
-  - Удалена `security-crypto:1.1.0-alpha06` (alpha, не использовалась).
-  - Удалён `room-runtime`/`room-ktx`/`room-compiler` (нет Entity/DAO в проекте).
-  - Обновлены: `core-ktx 1.15.0`, `lifecycle 2.8.7`, `activity-compose 1.9.3`, `compose-bom 2024.12.01`, `navigation-compose 2.8.5`.
-- 🚀 **CI/CD**:
-  - GitHub Actions собирает **signed release APK** из секретов.
-  - Debug-сборка на pull request для проверки компиляции.
-  - Валидация `docker-compose.bridges.yml` в отдельном job.
-  - Добавлен `.dockerignore`.
-- 📋 Добавлены разрешения: `RECEIVE_BOOT_COMPLETED`, `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`.
+### Исправления крашей на Xiaomi HyperOS 3/4
+- 🐛 **WorkManager double initialization** — Matrix SDK вызывал `WorkManager.initialize()`, но Android уже проинициализировал его через `WorkManagerInitializer`. Отключён дефолтный инициализатор в манифесте.
+- 🐛 **Realm decryption failed** — после переустановки с другим signing key файл `matrix-sdk-auth.realm` не расшифровывался. `AppModule.provideMatrix()` теперь ловит исключение, удаляет повреждённые `.realm` файлы и повторяет.
+- 🐛 **SuperNotCalledException** — try-catch вокруг `super.onCreate()` в MainActivity глотал исключение Hilt-инъекции до завершения `super.onCreate()`. Обёртка удалена.
+- 🐛 **allowBackup="false"** — отключён бэкап для предотвращения восстановления несовместимых Realm файлов после переустановки.
+
+### Совместимость с Android 15/16 (HyperOS 3/4, One UI и др.)
+- Устранён конфликт `enableEdgeToEdge()` и `window.statusBarColor` на Android 15+.
+- `compileSdk`/`targetSdk` обновлены до 36 (Android 16).
+- Удалён SplashScreen compat library (adaptive icon crash на OEM-устройствах).
+
+### Выживание на OEM-оболочках
+- Запрос отключения оптимизации батареи (Samsung One UI, Xiaomi HyperOS/MIUI, Huawei EMUI, Oppo ColorOS, OnePlus, Vivo FuntouchOS).
+- `BootReceiver` для восстановления после перезагрузки.
+- `OemBatteryHelper` — OEM-специфичные экраны настроек.
+- Централизованные каналы уведомлений (звонки, сообщения, синхронизация).
+
+### Foreground Service
+- Проверка разрешений camera/microphone перед стартом с соответствующими типами.
+- Обработка `SecurityException` при запуске foreground service.
+
+### Сервер (Docker)
+- 🆕 **Coturn** — TURN/STUN сервер для VoIP-звонков (без него звонки работают только в LAN).
+- Конфиги мостов маунтятся `:ro` в контейнер Synapse для appservice registration.
+- Полная инструкция по установке сервера в `docs/bridges.md` (на русском).
+- `.env.example` расширен: `TURN_SHARED_SECRET`, `SYNAPSE_REGISTRATION_SHARED_SECRET`, порты Coturn.
+
+### Очистка зависимостей
+- Удалена `security-crypto:1.1.0-alpha06` (alpha, не использовалась).
+- Удалён `room-runtime`/`room-ktx`/`room-compiler` (нет Entity/DAO в проекте).
+- Обновлены: `core-ktx 1.15.0`, `lifecycle 2.8.7`, `activity-compose 1.9.3`, `compose-bom 2024.12.01`, `navigation-compose 2.8.5`.
+
+### CI/CD
+- GitHub Actions собирает signed release APK из секретов.
+- Debug-сборка на pull request.
+- Валидация `docker-compose.bridges.yml` и ARM64 override.
+- `.dockerignore` добавлен.
 
 ### Сборка
 - `versionCode`: 6

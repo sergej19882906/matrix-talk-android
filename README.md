@@ -36,9 +36,25 @@ Android-клиент Matrix Talk для децентрализованной с�
 - ✅ Поддержка Samsung One UI, Xiaomi HyperOS/MIUI, Huawei EMUI, Oppo ColorOS, OnePlus, Vivo FuntouchOS
 - ✅ Автовосстановление после перезагрузки устройства (BootReceiver)
 
-## Мосты Telegram, WhatsApp и Signal
+### 🔗 Мосты Telegram, WhatsApp и Signal
+- ✅ Экран настройки мостов в приложении
+- ✅ Серверная заготовка: Synapse + PostgreSQL + Coturn + mautrix-мосты
+- ✅ Полная инструкция по установке сервера в `docs/bridges.md`
 
-В приложение добавлен экран настройки мостов. Серверная заготовка для Synapse, PostgreSQL и mautrix-мостов находится в `docker-compose.bridges.yml`, а полная инструкция — в `docs/bridges.md`. Мосты работают на собственном Matrix homeserver.
+## Сервер
+
+`docker-compose.bridges.yml` — готовый стек для собственного Matrix-сервера:
+
+| Сервис | Назначение |
+|--------|------------|
+| **Synapse** | Matrix homeserver |
+| **PostgreSQL** | База данных |
+| **Coturn** | TURN/STUN сервер для VoIP-звонков |
+| **mautrix-telegram** | Мост Telegram |
+| **mautrix-whatsapp** | Мост WhatsApp |
+| **mautrix-signal** | Мост Signal |
+
+Пошаговая инструкция по установке и настройке — в [`docs/bridges.md`](docs/bridges.md).
 
 ## Скриншоты интерфейса
 
@@ -97,7 +113,7 @@ app/
 2. Запустите на эмуляторе или устройстве.
 
 **CI/CD:**
-Проект настроен на автоматическую сборку и публикацию **подписанного Release APK**. При создании тега версии (например, `v1.1.4`) GitHub Actions автоматически собирает APK и создаёт релиз в репозитории. На pull request запускается debug-сборка и валидация docker-compose.
+При создании тега версии (например, `v1.1.4`) GitHub Actions автоматически собирает подписанный Release APK и публикует релиз. На pull request запускается debug-сборка и валидация docker-compose.
 
 **Команды сборки:**
 ```bash
