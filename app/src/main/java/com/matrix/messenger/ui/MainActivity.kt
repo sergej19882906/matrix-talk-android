@@ -15,6 +15,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.rememberNavController
 import com.matrix.messenger.data.repository.MatrixRepository
+import com.matrix.messenger.receiver.OemBatteryHelper
 import com.matrix.messenger.ui.navigation.AppNavigation
 import com.matrix.messenger.ui.navigation.Screen
 import com.matrix.messenger.ui.theme.MatrixMessengerTheme
@@ -46,6 +47,9 @@ class MainActivity : ComponentActivity() {
             matrixRepository.initialize()
             isAuthenticated = matrixRepository.currentUser.first() != null
             isReady = true
+            if (isAuthenticated) {
+                requestBatteryBypassIfNeeded()
+            }
         }
 
         setContent {
@@ -68,5 +72,9 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    private fun requestBatteryBypassIfNeeded() {
+        OemBatteryHelper.requestBatteryOptimizationBypass(this)
     }
 }

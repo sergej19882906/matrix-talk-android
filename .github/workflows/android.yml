@@ -3,7 +3,9 @@ name: Android CI/CD
 on:
   push:
     tags:
-      - 'v*' # Запускать при пуше любого тега, начинающегося с 'v'
+      - 'v*'
+  pull_request:
+    branches: [main]
 
 permissions:
   contents: write
@@ -26,17 +28,58 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Decode keystore
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > matrix-messenger.jks
+
+      - name: Create local.properties (release)
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" >> local.properties
+          echo "keystore.file=matrix-messenger.jks" >> local.properties
+          echo "keystore.alias=${{ secrets.KEYSTORE_ALIAS }}" >> local.properties
+          echo "keystore.password=${{ secrets.KEYSTORE_PASSWORD }}" >> local.properties
+          echo "key.password=${{ secrets.KEY_PASSWORD }}" >> local.properties
+
+      - name: Create local.properties (PR)
+        if: "!startsWith(github.ref, 'refs/tags/v')"
+        run: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" >> local.properties
+
+      - name: Build Release APK
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: ./gradlew assembleRelease
+
       - name: Build Debug APK
+        if: "!startsWith(github.ref, 'refs/tags/v')"
         run: ./gradlew assembleDebug
 
       - name: Create Release
-        id: create_release
+        if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: app/build/outputs/apk/debug/app-debug.apk
+          files: app/build/outputs/apk/release/app-release.apk
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  validate-compose:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate docker-compose.bridges.yml
+        run: |
+          cp .env.example .env
+          docker compose -f docker-compose.bridges.yml config --quiet
+
+      - name: Validate docker-compose.arm64.yml override
+        run: |
+          cp .env.example .env
+          docker compose -f docker-compose.bridges.yml -f docker-compose.arm64.yml config --quiet

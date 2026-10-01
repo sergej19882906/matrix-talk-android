@@ -31,6 +31,11 @@ Android-клиент Matrix Talk для децентрализованной с�
 - ✅ Предпросмотр видео в чате
 - ✅ Прогресс-бар загрузки/скачивания файлов
 
+### 🔋 Совместимость с OEM-оболочками
+- ✅ Запрос отключения оптимизации батареи (Android 14+)
+- ✅ Поддержка Samsung One UI, Xiaomi HyperOS/MIUI, Huawei EMUI, Oppo ColorOS, OnePlus, Vivo FuntouchOS
+- ✅ Автовосстановление после перезагрузки устройства (BootReceiver)
+
 ## Мосты Telegram, WhatsApp и Signal
 
 В приложение добавлен экран настройки мостов. Серверная заготовка для Synapse, PostgreSQL и mautrix-мостов находится в `docker-compose.bridges.yml`, а полная инструкция — в `docs/bridges.md`. Мосты работают на собственном Matrix homeserver.
@@ -55,7 +60,6 @@ Android-клиент Matrix Talk для децентрализованной с�
 | **Звонки** | WebRTC (stream-webrtc-android 1.0.0) |
 | **Изображения/Видео** | Coil 2.7.0 + Coil Video |
 | **Разрешения** | Accompanist Permissions 0.32.0 |
-| **БД** | Room 2.6.1 |
 | **Хранилище** | DataStore Preferences 1.1.1 |
 
 ## Структура проекта
@@ -66,10 +70,12 @@ app/
 │   ├── java/com/matrix/messenger/
 │   │   ├── data/
 │   │   │   ├── model/          # Модели данных (Message, CallState, CallSession)
-│   │   │   └── repository/     # Репозитории (ChatRepository, CallRepository)
+│   │   │   └── repository/     # Репозитории (MatrixRepository, CallRepository)
 │   │   ├── di/                 # Dependency Injection (Hilt modules)
+│   │   ├── receiver/           # BootReceiver, OemBatteryHelper, NotificationChannels
 │   │   ├── service/            # Foreground Services (CallService)
 │   │   └── ui/
+│   │       ├── bridges/        # Управление мостами
 │   │       ├── call/           # Экраны звонков (CallScreen, CallActivity, IncomingCallActivity, CallViewModel)
 │   │       ├── chat/           # Экран чата
 │   │       ├── home/           # Список чатов
@@ -84,14 +90,14 @@ app/
 ### Требования
 - Android Studio Ladybug (2024.2.1) или новее
 - JDK 17
-- Android SDK 35
+- Android SDK 36
 
 ### Шаги
 1. Откройте проект в Android Studio и дождитесь синхронизации Gradle.
 2. Запустите на эмуляторе или устройстве.
 
 **CI/CD:**
-Проект настроен на автоматическую сборку и публикацию APK. При создании тега версии (например, `v1.1.3`) GitHub Actions автоматически собирает APK и создает релиз в репозитории.
+Проект настроен на автоматическую сборку и публикацию **подписанного Release APK**. При создании тега версии (например, `v1.1.4`) GitHub Actions автоматически собирает APK и создаёт релиз в репозитории. На pull request запускается debug-сборка и валидация docker-compose.
 
 **Команды сборки:**
 ```bash
@@ -103,3 +109,4 @@ app/
 chmod +x gradlew
 ./gradlew assembleDebug
 ./gradlew assembleRelease
+```

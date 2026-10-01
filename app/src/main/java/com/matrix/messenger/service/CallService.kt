@@ -1,24 +1,26 @@
 package com.matrix.messenger.service
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
+import android.Manifest
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
+import androidx.core.content.ContextCompat
 import com.matrix.messenger.R
+import com.matrix.messenger.receiver.NotificationChannels
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class CallService : Service() {
 
     companion object {
-        const val CHANNEL_ID = "call_channel"
+        private const val TAG = "CallService"
         const val NOTIFICATION_ID = 1001
 
         fun startOutgoingCall(context: Context, callId: String, roomId: String, peerName: String, isVideo: Boolean) {
@@ -26,7 +28,7 @@ class CallService : Service() {
                 putExtra("peerName", peerName)
                 putExtra("isVideo", isVideo)
             }
-            androidx.core.content.ContextCompat.startForegroundService(context, intent)
+            ContextCompat.startForegroundService(context, intent)
         }
 
         fun endCall(context: Context) {
@@ -36,14 +38,13 @@ class CallService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        createNotificationChannel()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val peerName = intent?.getStringExtra("peerName") ?: "Звонок"
         val isVideo = intent?.getBooleanExtra("isVideo", false) ?: false
 
-        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+        val notification = NotificationCompat.Builder(this, NotificationChannels.CALLS)
             .setSmallIcon(android.R.drawable.ic_menu_call)
             .setContentTitle(if (isVideo) "Видеозвонок" else "Аудиозвонок")
             .setContentText(peerName)
@@ -52,24 +53,40 @@ class CallService : Service() {
             .setOngoing(true)
             .build()
 
-        ServiceCompat.startForeground(
-            this,
-            NOTIFICATION_ID,
-            notification,
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
-        )
+        val foregroundServiceType = computeForegroundServiceType()
+        try {
+            ServiceCompat.startForeground(
+                this,
+                NOTIFICATION_ID,
+                notification,
+                foregroundServiceType
+            )
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Failed to start foreground service", e)
+            stopSelf()
+            return START_NOT_STICKY
+        }
         return START_STICKY
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(CHANNEL_ID, "Звонки", NotificationManager.IMPORTANCE_HIGH).apply {
-                description = "Уведомления о звонках"
+    private fun computeForegroundServiceType(): Int {
+        var type = ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                == PackageManager.PERMISSION_GRANTED
+            ) {
+                type = type or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
             }
-            val notificationManager = getSystemService(NotificationManager::class.java)
-            notificationManager?.createNotificationChannel(channel)
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED
+            ) {
+                type = type or ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA
+            }
+        } else {
+            type = type or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
         }
+        return type
     }
 }

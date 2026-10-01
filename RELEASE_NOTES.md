@@ -1,5 +1,41 @@
 # Matrix Talk — История версий
 
+## 1.1.4
+**Дата релиза:** 2026-10-01
+
+### Что нового
+- 🔧 **Совместимость с Android 15/16 (HyperOS 3/4, One UI и др.)**:
+  - Исправлен краш при запуске на Android 12+ — тема `Theme.SplashScreen` для `installSplashScreen()`.
+  - Устранён конфликт `enableEdgeToEdge()` и `window.statusBarColor` на Android 15+.
+  - `CallActivity` и `IncomingCallActivity` используют отдельную тему без splash screen.
+  - `compileSdk`/`targetSdk` обновлены до 36 (Android 16).
+- 🔋 **Выживание на OEM-оболочках** (Samsung, Xiaomi, Huawei, Oppo, OnePlus, Vivo):
+  - Запрос отключения оптимизации батареи после авторизации.
+  - `BootReceiver` для восстановления после перезагрузки устройства.
+  - `OemBatteryHelper` — открытие OEM-специфичных экранов настроек батареи/автозапуска.
+  - Централизованные каналы уведомлений (звонки, сообщения, синхронизация).
+- 🛡 **Foreground Service**:
+  - Проверка разрешений camera/microphone перед стартом с соответствующими типами.
+  - Обработка `SecurityException` при запуске foreground service.
+- 🧹 **Очистка зависимостей**:
+  - Удалена `security-crypto:1.1.0-alpha06` (alpha, не использовалась).
+  - Удалён `room-runtime`/`room-ktx`/`room-compiler` (нет Entity/DAO в проекте).
+  - Обновлены: `core-ktx 1.15.0`, `lifecycle 2.8.7`, `activity-compose 1.9.3`, `compose-bom 2024.12.01`, `navigation-compose 2.8.5`.
+- 🚀 **CI/CD**:
+  - GitHub Actions собирает **signed release APK** из секретов.
+  - Debug-сборка на pull request для проверки компиляции.
+  - Валидация `docker-compose.bridges.yml` в отдельном job.
+  - Добавлен `.dockerignore`.
+- 📋 Добавлены разрешения: `RECEIVE_BOOT_COMPLETED`, `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`.
+
+### Сборка
+- `versionCode`: 6
+- `versionName`: 1.1.4
+- Минимальная версия Android: API 24
+- Целевая версия Android: API 36
+
+---
+
 ## 1.1.3
 **Дата релиза:** 2026-09-19
 

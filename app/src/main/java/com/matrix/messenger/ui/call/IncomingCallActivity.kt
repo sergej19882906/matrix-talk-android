@@ -2,7 +2,9 @@ package com.matrix.messenger.ui.call
 
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -61,10 +63,7 @@ class IncomingCallActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setShowWhenLocked(true)
-        setTurnScreenOn(true)
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        WindowCompat.setDecorFitsSystemWindows(window, false)
+        setupWindowForCall()
 
         val callId = intent.getStringExtra(EXTRA_CALL_ID) ?: ""
         val roomId = intent.getStringExtra(EXTRA_ROOM_ID) ?: ""
@@ -100,6 +99,22 @@ class IncomingCallActivity : ComponentActivity() {
                         }
                     )
                 }
+            }
+        }
+    }
+
+    private fun setupWindowForCall() {
+        setShowWhenLocked(true)
+        setTurnScreenOn(true)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            try {
+                if (!packageManager.hasSystemFeature("android.software.telecom")) {
+                    return
+                }
+            } catch (_: Exception) {
             }
         }
     }
