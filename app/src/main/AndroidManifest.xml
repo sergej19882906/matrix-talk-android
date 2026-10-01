@@ -66,7 +66,7 @@
         <activity
             android:name=".ui.call.CallActivity"
             android:exported="false"
-            android:theme="@style/Theme.MatrixMessenger.Main"
+            android:theme="@style/Theme.MatrixMessenger"
             android:showOnLockScreen="true"
             android:turnScreenOn="true"
             android:showWhenLocked="true"
@@ -75,11 +75,11 @@
             android:taskAffinity=""
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation" />
 
-        <!-- 🆕 Активность для входящего звонка -->
+        <!-- Активность для входящего звонка -->
         <activity
             android:name=".ui.call.IncomingCallActivity"
             android:exported="false"
-            android:theme="@style/Theme.MatrixMessenger.Main"
+            android:theme="@style/Theme.MatrixMessenger"
             android:showOnLockScreen="true"
             android:turnScreenOn="true"
             android:showWhenLocked="true"

@@ -12,7 +12,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.rememberNavController
 import com.matrix.messenger.data.repository.MatrixRepository
 import com.matrix.messenger.receiver.OemBatteryHelper
@@ -34,14 +33,8 @@ class MainActivity : ComponentActivity() {
     private var isAuthenticated by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        val splashScreen = installSplashScreen()
-
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
-        splashScreen.setKeepOnScreenCondition {
-            !isReady
-        }
 
         lifecycleScope.launch {
             matrixRepository.initialize()
