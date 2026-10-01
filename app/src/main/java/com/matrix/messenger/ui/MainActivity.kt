@@ -75,6 +75,8 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun requestBatteryBypassIfNeeded() {
-        OemBatteryHelper.requestBatteryOptimizationBypass(this)
+        window.decorView.post {
+            OemBatteryHelper.requestBatteryOptimizationBypass(this)
+        }
     }
 }
