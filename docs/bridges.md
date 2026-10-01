@@ -51,6 +51,7 @@ block with:
 ```yaml
 database:
   name: psycopg2
+  allow_unsafe_locale: true
   args:
     user: synapse
     password: YOUR_POSTGRES_PASSWORD
