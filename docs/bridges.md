@@ -195,41 +195,133 @@ docker exec -it matrix-talk-synapse register_new_matrix_user \
 
 ## Шаг 8. Мосты Telegram / WhatsApp / Signal (опционально)
 
-Каждый мост требует отдельной настройки. Общая последовательность:
+### 8.1. Создание баз данных для мостов
 
-1. **Сгенерируйте конфиг моста:**
+Мосты используют отдельные базы данных в PostgreSQL:
 
 ```bash
-# Пример для Telegram
-docker run --rm -it \
-  -v "$PWD/server-data/mautrix-telegram:/data" \
-  dock.mau.dev/mautrix/telegram:latest
+docker exec -it matrix-talk-postgres psql -U synapse -c \
+  "CREATE DATABASE mautrix_telegram; CREATE DATABASE mautrix_whatsapp; CREATE DATABASE mautrix_signal;"
 ```
 
-2. **Отредактируйте конфиг моста** (`server-data/mautrix-telegram/config.yaml`):
-   - Укажите `homeserver.address: http://synapse:8008`
-   - Укажите `homeserver.domain: matrix.example.org`
-   - Укажите `appservice.as_token` и `hs_token`
-   - Настройте Telegram API ID и hash (https://my.telegram.org)
+### 8.2. Генерация конфигурации мостов
 
-3. **Зарегистрируйте мост в Synapse:** добавьте путь к registration-файлу
-   моста в `homeserver.yaml`:
+Запустите каждый контейнер моста один раз для генерации `config.yaml`:
+
+```bash
+# Telegram (требует API ID/hash с https://my.telegram.org/apps)
+docker run --rm -v "$PWD/server-data/mautrix-telegram:/data" \
+  dock.mau.dev/mautrix/telegram:latest
+
+# WhatsApp
+docker run --rm -v "$PWD/server-data/mautrix-whatsapp:/data" \
+  dock.mau.dev/mautrix/whatsapp:latest
+
+# Signal
+docker run --rm -v "$PWD/server-data/mautrix-signal:/data" \
+  dock.mau.dev/mautrix/signal:latest
+```
+
+Запустите ещё раз после редактирования (см. ниже) для генерации `registration.yaml`.
+
+### 8.3. Правка конфигурации каждого моста
+
+Для **каждого** моста отредактируйте `server-data/mautrix-<bridge>/config.yaml`:
+
+```yaml
+# 1. Адрес homeserver (внутри Docker-сети)
+homeserver:
+    address: http://synapse:8008
+    domain: matrix.example.org        # ваш MATRIX_SERVER_NAME
+
+# 2. Слушать на всех интерфейсах (для Docker)
+appservice:
+    hostname: 0.0.0.0
+    # порт: 29317 (telegram), 29318 (whatsapp), 29328 (signal)
+
+# 3. База данных (отдельная для каждого моста)
+database:
+    type: postgres
+    uri: postgres://synapse:ПАРОЛЬ@postgres/mautrix_ТЕГ_МОСТА?sslmode=disable
+    #                                 ↑ имя БД из шага 8.1
+
+# 4. Права доступа
+bridge:
+    permissions:
+        "*": relay
+        "matrix.example.org": user
+        "@admin:matrix.example.org": admin
+```
+
+**Telegram дополнительно** — укажите реальные API ключи:
+```yaml
+network:
+    api_id: ВАШ_API_ID       # с https://my.telegram.org/apps
+    api_hash: ВАШ_API_HASH   # с https://my.telegram.org/apps
+```
+
+> **⚠️ Без `api_id`/`api_hash` Telegram-мост не запустится.**
+> Получите их на https://my.telegram.org/apps (войдите → API development tools).
+
+### 8.4. Генерация registration-файлов
+
+Повторно запустите каждый контейнер — мост прочтёт отредактированный конфиг
+и сгенерирует `registration.yaml` с `as_token`/`hs_token`:
+
+```bash
+docker run --rm -v "$PWD/server-data/mautrix-telegram:/data" \
+  dock.mau.dev/mautrix/telegram:latest
+# Повторите для whatsapp и signal
+```
+
+### 8.5. Регистрация мостов в Synapse
+
+Добавьте в `server-data/synapse/homeserver.yaml`:
 
 ```yaml
 app_service_config_files:
   - /data/mautrix-telegram/registration.yaml
+  - /data/mautrix-whatsapp/registration.yaml
+  - /data/mautrix-signal/registration.yaml
 ```
 
-4. **Запустите мосты:**
+Файлы мостов маунтятся в контейнер Synapse через docker-compose (тома `:ro`).
+Перезапустите Synapse:
+
+```bash
+docker compose -f docker-compose.bridges.yml up -d --force-recreate synapse
+```
+
+### 8.6. Запуск мостов
 
 ```bash
 docker compose -f docker-compose.bridges.yml --profile bridges up -d
 ```
 
-5. **Привяжите аккаунт:** в Matrix Talk откройте экран «Мосты» и следуйте
-   инструкции для нужного мессенджера.
+Проверка:
 
-> Подробные инструкции по каждому мосту: [mautrix-telegram](https://docs.mau.fi/bridges/go/telegram/),
+```bash
+docker compose -f docker-compose.bridges.yml --profile bridges ps
+```
+
+Все контейнеры должны быть `Up` (не `Restarting`).
+
+> **⚠️ Права файлов:** если мосты падают с `Permission denied`, выполните:
+> ```bash
+> docker run --rm -v "$PWD/server-data:/server-data" alpine \
+>   chmod -R 777 /server-data/mautrix-telegram /server-data/mautrix-whatsapp /server-data/mautrix-signal
+> ```
+
+### 8.7. Привязка аккаунтов
+
+В Matrix Talk откройте экран «Мосты» (иконка ссылки на экране чатов) и
+следуйте инструкции:
+
+- **Telegram:** отправьте `!tg login` в комнату моста, введите номер телефона
+- **WhatsApp:** отправьте `!wa login` и отсканируйте QR-код
+- **Signal:** отправьте `!signal login` и привяжите устройство
+
+> Подробные инструкции: [mautrix-telegram](https://docs.mau.fi/bridges/go/telegram/),
 > [mautrix-whatsapp](https://docs.mau.fi/bridges/go/whatsapp/),
 > [mautrix-signal](https://docs.mau.fi/bridges/go/signal/)
 
