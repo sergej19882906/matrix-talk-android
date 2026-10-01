@@ -1,150 +1,328 @@
-# Matrix Talk Server Setup
+# Инструкция по установке и настройке сервера Matrix Talk
 
-This guide covers deploying a Matrix homeserver with VoIP calling and optional
-messenger bridges, matching the capabilities of the Matrix Talk Android app.
+Полное руководство по развёртыванию собственного Matrix-сервера с поддержкой
+мессенджера, аудио/видео звонков и опциональных мостов Telegram, WhatsApp и Signal.
 
-## Included services
+---
 
-`docker-compose.bridges.yml` defines:
+## Что входит в сервер
 
-| Service | Image | Purpose |
-|---------|-------|---------|
-| Synapse | `matrixdotorg/synapse:latest` | Matrix homeserver |
-| PostgreSQL | `postgres:16-alpine` | Synapse database |
-| Coturn | `coturn/coturn:latest` | TURN/STUN server for VoIP calls |
-| mautrix-telegram | `dock.mau.dev/mautrix/telegram:latest` | Telegram bridge |
-| mautrix-whatsapp | `dock.mau.dev/mautrix/whatsapp:latest` | WhatsApp bridge |
-| mautrix-signal | `dock.mau.dev/mautrix/signal:latest` | Signal bridge |
+`docker-compose.bridges.yml` определяет 6 сервисов:
 
-Bridge containers use the `bridges` Compose profile so Synapse can start first.
+| Сервис | Образ | Назначение |
+|--------|-------|------------|
+| **Synapse** | `matrixdotorg/synapse:latest` | Matrix homeserver — ядро мессенджера |
+| **PostgreSQL** | `postgres:16-alpine` | База данных Synapse |
+| **Coturn** | `coturn/coturn:latest` | TURN/STUN сервер для VoIP-звонков |
+| **mautrix-telegram** | `dock.mau.dev/mautrix/telegram:latest` | Мост Telegram |
+| **mautrix-whatsapp** | `dock.mau.dev/mautrix/whatsapp:latest` | Мост WhatsApp |
+| **mautrix-signal** | `dock.mau.dev/mautrix/signal:latest` | Мост Signal |
 
-## First setup
+Мосты используют профиль Compose `bridges`, чтобы Synapse запускался первым.
 
-### 1. Configure environment
+---
+
+## Требования
+
+- Docker Engine 20.10+ и Docker Compose v2+
+- Доменное имя с DNS A-записью, указывающей на ваш сервер
+- Открытые порты (см. раздел «Порты» ниже)
+
+---
+
+## Шаг 1. Настройка переменных окружения
 
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` and set:
-- `MATRIX_SERVER_NAME` — your domain (e.g. `matrix.example.org`)
-- `POSTGRES_PASSWORD` — long random password
-- `TURN_SHARED_SECRET` — generate with `openssl rand -hex 32`
-- `SYNAPSE_REGISTRATION_SHARED_SECRET` — generate with `openssl rand -hex 32`
+Отредактируйте `.env`:
 
-### 2. Generate Synapse config
+```ini
+# === Matrix Talk Server Configuration ===
+
+# --- Homeserver ---
+# Ваш домен (должен совпадать с DNS / обратным прокси)
+MATRIX_SERVER_NAME=matrix.example.org
+
+# --- PostgreSQL ---
+POSTGRES_USER=synapse
+POSTGRES_PASSWORD=<сгенерируйте длинный случайный пароль>
+POSTGRES_DB=synapse
+
+# --- TURN Server (VoIP звонки) ---
+# Общий секрет для TURN-аутентификации
+# Генерация: openssl rand -hex 32
+TURN_SHARED_SECRET=<сгенерируйте случайный секрет>
+# UDP-порт TURN/STUN
+TURN_PORT=3478
+# TLS-порт (требует сертификаты в server-data/coturn/)
+TURN_TLS_PORT=5349
+# Диапазон портов для медиа-релея
+TURN_MIN_PORT=49152
+TURN_MAX_PORT=65535
+
+# --- Synapse Admin ---
+# Секрет для скрипта register_new_matrix_user
+# Генерация: openssl rand -hex 32
+SYNAPSE_REGISTRATION_SHARED_SECRET=<сгенерируйте случайный секрет>
+```
+
+> **⚠️ Никогда не коммитьте `.env` в git.** Файл добавлен в `.gitignore`.
+
+---
+
+## Шаг 2. Генерация конфигурации Synapse
+
+Новый Docker-образ Synapse **не генерирует** конфиг из переменных окружения
+автоматически. Нужно запустить генерацию вручную:
 
 ```bash
 mkdir -p server-data/synapse
+
 docker run --rm -it \
   -v "$PWD/server-data/synapse:/data" \
-  -e SYNAPSE_SERVER_NAME=example.org \
+  -e SYNAPSE_SERVER_NAME=matrix.example.org \
   -e SYNAPSE_REPORT_STATS=no \
   matrixdotorg/synapse:latest generate
 ```
 
-### 3. Configure Synapse to use PostgreSQL
+Эта команда создаст:
+- `server-data/synapse/homeserver.yaml` — основной конфиг
+- `server-data/synapse/<домен>.signing.key` — ключ подписи сервера
+- `server-data/synapse/<домен>.log.config` — конфиг логирования
 
-Edit `server-data/synapse/homeserver.yaml`. Replace the default SQLite database
-block with:
+> **На Windows (PowerShell):** замените `$PWD` на полный путь, например
+> `E:\PR\matrix-messenger-android\server-data\synapse`.
+
+---
+
+## Шаг 3. Настройка PostgreSQL
+
+Откройте `server-data/synapse/homeserver.yaml` и замените блок `database`
+(по умолчанию SQLite) на PostgreSQL:
 
 ```yaml
 database:
   name: psycopg2
-  allow_unsafe_locale: true
+  allow_unsafe_locale: true    # Обязательно! Docker postgres использует en_US.utf8
   args:
     user: synapse
-    password: YOUR_POSTGRES_PASSWORD
+    password: ВАШ_POSTGRES_PASSWORD   # из .env
     database: synapse
-    host: postgres
+    host: postgres                    # имя контейнера Docker
     cp_min: 5
     cp_max: 10
 ```
 
-### 4. Enable VoIP calling (TURN)
+> **⚠️ `allow_unsafe_locale` должен быть на уровне `database:`, а не внутри `args:`.**
+> Docker-образ `postgres:16-alpine` использует collation `en_US.utf8`, а Synapse
+> требует `C`. Без этого флага Synapse не запустится.
 
-Add the following to `server-data/synapse/homeserver.yaml`:
+---
+
+## Шаг 4. Настройка VoIP-звонков (TURN)
+
+Без TURN-сервера VoIP-звонки работают **только в одной локальной сети**.
+Coturn обеспечивает проброс NAT для аудио/видео звонков через интернет.
+
+Добавьте в конец `server-data/synapse/homeserver.yaml`:
 
 ```yaml
 turn_uris:
-  - "turn:YOUR_DOMAIN?transport=udp"
-  - "turn:YOUR_DOMAIN?transport=tcp"
-turn_shared_secret: "YOUR_TURN_SHARED_SECRET"
-turn_username_lifetime: 86400000
+  - "turn:matrix.example.org?transport=udp"
+  - "turn:matrix.example.org?transport=tcp"
+turn_shared_secret: "ВАШ_TURN_SHARED_SECRET"   # из .env
+turn_username_lifetime: 86400000               # 24 часа в мс
 ```
 
-Replace `YOUR_DOMAIN` with your `MATRIX_SERVER_NAME` and `YOUR_TURN_SHARED_SECRET`
-with the value from `.env`.
+Замените `matrix.example.org` на ваш `MATRIX_SERVER_NAME`.
 
-**Without a TURN server, VoIP calls only work on the same local network.**
-Coturn enables audio/video calls across NAT and the internet.
+---
 
-### 5. Open firewall ports
+## Шаг 5. Порты фаервола
 
-| Port | Protocol | Service |
-|------|----------|---------|
-| 8008 | TCP | Synapse (Client & Federation API) |
-| 3478 | UDP | Coturn TURN/STUN |
-| 5349 | TCP | Coturn TURN over TLS (if certs configured) |
-| 49152–65535 | UDP | Coturn media relay |
+Откройте на сервере следующие порты:
 
-### 6. Create the admin user
+| Порт | Протокол | Сервис | Назначение |
+|------|----------|--------|------------|
+| 8008 | TCP | Synapse | Client API + Federation API |
+| 8448 | TCP | Synapse | Federation (если прямой TLS) |
+| 3478 | UDP | Coturn | TURN/STUN |
+| 5349 | TCP | Coturn | TURN over TLS (если есть сертификаты) |
+| 49152–65535 | UDP | Coturn | Медиа-релей для VoIP |
 
-Start Synapse and PostgreSQL first:
+---
+
+## Шаг 6. Запуск сервера
+
+### Основные сервисы (мессенджер + VoIP)
 
 ```bash
 docker compose -f docker-compose.bridges.yml up -d synapse postgres coturn
 ```
 
-Wait for Synapse to be ready, then register an admin account:
+Дождитесь запуска (Synapse станет `healthy`):
+
+```bash
+docker compose -f docker-compose.bridges.yml ps
+```
+
+### Проверка
+
+```bash
+curl http://localhost:8008/_matrix/client/versions
+```
+
+Должен вернуть JSON с версиями API (v1.1–v1.12).
+
+---
+
+## Шаг 7. Создание администратора
 
 ```bash
 docker exec -it matrix-talk-synapse register_new_matrix_user \
   -c /data/homeserver.yaml \
   --admin \
   --password-prompt \
-  @admin:example.org
+  @admin:matrix.example.org
 ```
 
-### 7. Start bridge services (optional)
+Введите пароль при запросе. Этот аккаунт будет использоваться для входа в
+приложение Matrix Talk.
 
-Each bridge needs its own generated config and a registration file added to
-Synapse. Follow the current instructions from the mautrix project for each
-bridge before starting it.
+---
 
-After bridge configuration:
+## Шаг 8. Мосты Telegram / WhatsApp / Signal (опционально)
+
+Каждый мост требует отдельной настройки. Общая последовательность:
+
+1. **Сгенерируйте конфиг моста:**
+
+```bash
+# Пример для Telegram
+docker run --rm -it \
+  -v "$PWD/server-data/mautrix-telegram:/data" \
+  dock.mau.dev/mautrix/telegram:latest
+```
+
+2. **Отредактируйте конфиг моста** (`server-data/mautrix-telegram/config.yaml`):
+   - Укажите `homeserver.address: http://synapse:8008`
+   - Укажите `homeserver.domain: matrix.example.org`
+   - Укажите `appservice.as_token` и `hs_token`
+   - Настройте Telegram API ID и hash (https://my.telegram.org)
+
+3. **Зарегистрируйте мост в Synapse:** добавьте путь к registration-файлу
+   моста в `homeserver.yaml`:
+
+```yaml
+app_service_config_files:
+  - /data/mautrix-telegram/registration.yaml
+```
+
+4. **Запустите мосты:**
 
 ```bash
 docker compose -f docker-compose.bridges.yml --profile bridges up -d
 ```
 
-## ARM64 hosts
+5. **Привяжите аккаунт:** в Matrix Talk откройте экран «Мосты» и следуйте
+   инструкции для нужного мессенджера.
 
-Add the override file to every Compose command:
+> Подробные инструкции по каждому мосту: [mautrix-telegram](https://docs.mau.fi/bridges/go/telegram/),
+> [mautrix-whatsapp](https://docs.mau.fi/bridges/go/whatsapp/),
+> [mautrix-signal](https://docs.mau.fi/bridges/go/signal/)
+
+---
+
+## ARM64 (Raspberry Pi и др.)
+
+Добавьте файл переопределения ко всем командам:
 
 ```bash
 docker compose -f docker-compose.bridges.yml -f docker-compose.arm64.yml up -d synapse postgres coturn
 docker compose -f docker-compose.bridges.yml -f docker-compose.arm64.yml --profile bridges up -d
 ```
 
-## Production notes
+---
 
-- **HTTPS:** Use a reverse proxy (Caddy, nginx, Traefik) in front of Synapse.
-  Caddy provides automatic TLS and is the simplest option.
-- **Federation:** Add `/.well-known/matrix/server` and `/.well-known/matrix/client`
-  DNS/HTTP records pointing to your Synapse.
-- **Coturn TLS:** Place `cert.pem` and `key.pem` in `server-data/coturn/` and
-  add `--cert=/etc/coturn/cert.pem --pkey=/etc/coturn/key.pem` to the command.
-- **Backups:** Back up `server-data/postgres` and `server-data/synapse` regularly.
-- **Pin versions:** Replace `latest` tags with specific versions for reproducibility.
-- **Do not commit** `.env`, access tokens, bridge databases, registration files,
-  or encryption keys.
+## Продакшен
 
-## In Matrix Talk
+### HTTPS / обратный прокси
 
-Open the link icon in the Chats screen to see Telegram, WhatsApp, and Signal
-bridge instructions. The app does not display a false "connected" state: actual
-connection status is determined by the bridge and homeserver.
+Рекомендуется **Caddy** — автоматический TLS:
 
-VoIP calls use WebRTC through the TURN server configured above. The app requests
-TURN credentials from Synapse when initiating or receiving a call.
+```
+matrix.example.org {
+    reverse_proxy localhost:8008
+}
+```
+
+Или **nginx**:
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name matrix.example.org;
+
+    ssl_certificate /etc/ssl/certs/matrix.example.org.crt;
+    ssl_certificate_key /etc/ssl/private/matrix.example.org.key;
+
+    location / {
+        proxy_pass http://localhost:8008;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $remote_addr;
+    }
+}
+```
+
+### Федерация
+
+Для федерации с другими серверами Matrix создайте `.well-known`:
+
+`https://matrix.example.org/.well-known/matrix/server`:
+```json
+{"m.server": "matrix.example.org:443"}
+```
+
+`https://matrix.example.org/.well-known/matrix/client`:
+```json
+{"m.homeserver": {"base_url": "https://matrix.example.org"}}
+```
+
+### Coturn с TLS
+
+Поместите `cert.pem` и `key.pem` в `server-data/coturn/` и добавьте в
+`docker-compose.bridges.yml` параметры Coturn:
+
+```yaml
+command:
+  - "--cert=/etc/coturn/cert.pem"
+  - "--pkey=/etc/coturn/key.pem"
+```
+
+### Бэкапы
+
+Регулярно бэкапьте:
+- `server-data/postgres/` — база данных
+- `server-data/synapse/` — конфигурация, ключи подписи, медиа
+
+### Рекомендации
+
+- **Пиньте версии** — замените `latest` на конкретные теги образов
+- **Не коммитьте** `.env`, токены доступа, базы мостов, файлы регистрации,
+  ключи шифрования
+- **Ограничьте права** мостов минимально необходимыми
+- **Настройте мониторинг** логов Synapse и Coturn
+
+---
+
+## Подключение из Matrix Talk
+
+1. Откройте приложение
+2. На экране входа укажите адрес homeserver: `https://matrix.example.org`
+3. Введите логин и пароль администратора (шаг 7)
+4. Для настройки мостов — нажмите иконку ссылки на экране чатов
+
+VoIP-звонки используют WebRTC через настроенный TURN-сервер. Приложение
+автоматически запрашивает TURN-учётные данные у Synapse при звонке.
